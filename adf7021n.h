@@ -129,6 +129,9 @@ typedef enum
 #define ADF7021N_BBOS_CLK_DIVIDE_16		(2)
 #define ADF7021N_BBOS_CLK_DIVIDE_32		(3)
 
+
+void ax25_makePacket(char* dstAddr, char* srcAddr, uint8_t* data, uint8_t dataSize);
+
 void adf7021n_portSetup(void);
 void adf7021n_txInit(void);
 
@@ -161,7 +164,7 @@ void adf7021n_txCarriertest(void);
 void adf7021n_txHightest(void);
 void adf7021n_txLowtest(void);
 void adf7021n_enable_data_interrupt(void);
-unsigned char adf7021n_get_mode(void);
+unsigned char adf7021n_getMode(void);
 
 #define IDLE 0
 #define TX 1

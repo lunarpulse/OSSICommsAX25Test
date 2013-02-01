@@ -1,5 +1,59 @@
 #include "adf7021n.h"
 
+unsigned char ShiftReg;
+
+#define bitSet(value, bit) ((value) |= (0x01 << (bit)))
+#define bitClear(value, bit) ((value) &= ~(0x01 << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+#define setShiftRegLSB(bitValue) (bitWrite(ShiftReg, 0, bitValue ))
+
+char preamble_count;
+unsigned char preamble_found;
+
+volatile uint8_t adf702x_buf[] =  {0x7E,0x82, 0xA0, 0xA4, 0xA6, 0x40, 0x40, 0xE0,0x96, 0x94, 0x6C, 0x96, 0xA6, 0xA8, 0xE2,0xAE, 0x92, 0x88, 0x8A, 0x62, 0x40, 0x63,0x03,0xF0, 0x21, 0x30, 0x30, 0x30, 0x30, 0x2E, 0x30, 0x30, 0x4E, 0x2F, 0x30, 0x30,
+		0x30, 0x30, 0x30, 0x2E, 0x30, 0x30, 0x57, 0x3E,0x38, 0x76,0x7E};
+volatile uint8_t adf702x_rx_buf[RF_MAX];
+
+//static const uint32_t adf7021_tx_reg = 0x01600850;
+static unsigned char mode;
+
+
+uint8_t fcslo, fcshi;
+uint16_t fcs;
+uint8_t shiftbit;
+uint8_t stuff;
+uint8_t flag, fcsflag;
+#define TX_BUFFER_SIZE	(64)
+uint8_t txBuffer[64]={ 0x86,   0xA2,  0x40,  0x40,  0x40,  0x40,  // Dst Address
+		0x60, // SSID (call sign)
+		0X9E,  0xA6,  0xA6, 0x92, 0x40,   0x40,  // Src Address
+		0x61, // SSID (last call sign)
+		0x03, // Control
+		0xF0, // PID
+		0x54,0x65,0x73,0x74, // "Test"
+		0x54,0x65,0x73,0x74,
+		0x54,0x65,0x73,0x74,
+		0x54,0x65,0x73,0x74,
+		0x54,0x65,0x73,0x74,
+		0x54,0x65,0x73,0x74,
+		0x54,0x65,0x73,0x74,
+		0x54,0x65,0x73,0x74,
+		0x54,0x65,0x73,0x74};
+
+
+uint8_t bits_step = 0;
+uint16_t bytes_step = 0;
+uint8_t inbyte;
+
+typedef enum {
+	AX25_START,
+	AX25_DATA,
+	AX25_FCS,
+	AX25_END
+} TX_PACKET_FRAME;
+
+TX_PACKET_FRAME ax25_packet_mode;
+
 struct {
 	struct{
 		uint16_t fractional_n;
@@ -45,6 +99,9 @@ struct {
 } txReg;
 
 
+void sendPacket(void);
+
+
 /*
 Goal:
 fOut  =  437.850 MHz
@@ -66,14 +123,14 @@ data rate = 1200 bps
 */
 
 
-static const uint32_t adf7021_regs[] = {
-	0x01600850, //r0
-	0x00575011, //r1
-	0x0027F082, //r2 // 12.04dBm: PA setting 63
-	0x371493A3, //r3
-	0x80592C94, //r4
-	0x00003155, //r5
-};
+//static const uint32_t adf7021_regs[] = {
+//	0x01600850, //r0
+//	0x00575011, //r1
+//	0x0027F082, //r2 // 12.04dBm: PA setting 63
+//	0x371493A3, //r3
+//	0x80592C94, //r4
+//	0x00003155, //r5
+//};
 
 
 //static const uint32_t adf7021_regs[] = {
@@ -87,49 +144,50 @@ static const uint32_t adf7021_regs[] = {
 //};
 
 
-unsigned char ShiftReg;
+void ax25_makePacket(char* dstAddr, char* srcAddr, uint8_t* data, uint8_t dataSize)
+{
+	volatile uint8_t i;
 
-#define bitSet(value, bit) ((value) |= (0x01 << (bit)))
-#define bitClear(value, bit) ((value) &= ~(0x01 << (bit)))
-#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
-#define setShiftRegLSB(bitValue) (bitWrite(ShiftReg, 0, bitValue ))
+	// prevent buffer overflow
+	if ( dataSize + 16 >= TX_BUFFER_SIZE)
+	{
+		dataSize = TX_BUFFER_SIZE - 16;
+	}
 
-char preamble_count;
-unsigned char preamble_found;
+	for ( i = 0 ; i < TX_BUFFER_SIZE ; i++)
+	{
+		txBuffer[i] = 0;
+	}
 
-volatile uint8_t adf702x_buf[] =  {0x7E,0x82, 0xA0, 0xA4, 0xA6, 0x40, 0x40, 0xE0,0x96, 0x94, 0x6C, 0x96, 0xA6, 0xA8, 0xE2,0xAE, 0x92, 0x88, 0x8A, 0x62, 0x40, 0x63,0x03,0xF0, 0x21, 0x30, 0x30, 0x30, 0x30, 0x2E, 0x30, 0x30, 0x4E, 0x2F, 0x30, 0x30,
-		0x30, 0x30, 0x30, 0x2E, 0x30, 0x30, 0x57, 0x3E,0x38, 0x76,0x7E};
-volatile uint8_t adf702x_rx_buf[RF_MAX];
+	// First 16 Bytes data format is fixed
+	// Refer to AX.25 UI frame
+	// 6 Bytes
+	// address field shift 1 bit to the left
+	for(i = 0; i < 6 ; i++)
+	{
+		txBuffer[i] = (uint8_t)dstAddr[i] << 1;
+	}
 
-static const uint32_t adf7021_tx_reg = 0x01600850;
-static unsigned char mode;
+	// 1 Byte
+	txBuffer[6] = 0x60;
 
+	// 6 Bytes
+	// address field shift 1 bit to the left
+	for(i = 0; i < 6 ; i++)
+	{
+		txBuffer[i+7] = (uint8_t)srcAddr[i] << 1;
+	}
 
-uint8_t fcslo, fcshi;
-uint16_t fcs;
-uint8_t shiftbit;
-uint8_t stuff;
-uint8_t flag, fcsflag;
-uint8_t sendData[]={0x86,   0xA2,  0x40,  0x40,  0x40,  0x40,  0x60,  0X9E,  0xA6,  0xA6, 0x92,
-		0x40,   0x40,   0x61,  0x03,
-		0xF0,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74,0x54,0x65,0x73,0x74};
+	// 3 Bytes
+	txBuffer[13] = 0x61;
+	txBuffer[14] = 0x03;
+	txBuffer[15] = 0xF0;
 
-uint8_t bits_step = 0;
-uint16_t bytes_step = 0;
-uint8_t inbyte;
-
-
-typedef enum {
-	AX25_START,
-	AX25_DATA,
-	AX25_FCS,
-	AX25_END
-} TX_PACKET_FRAME;
-
-TX_PACKET_FRAME ax25_packet_mode;
-
-void sendPacket(void);
-
+	for ( i = 0 ; i < dataSize ; i ++)
+	{
+		txBuffer[i+16] = data[i];
+	}
+}
 
 void adf7021n_enable_data_interrupt()
 {
@@ -141,7 +199,7 @@ void adf7021n_enable_data_interrupt()
 //	P1IFG &= ~BIT2; // P1.2 IFG cleared just in case
 
 	// TX_TXCLK is 2.3
- 	P2OUT |= BIT3; // pull up
+// 	P2OUT |= BIT3; // pull up
  	P2IES |= BIT3; // interrupt hi/lo falling edge
  	P2IFG &= ~BIT3; // P2.3 IFG cleared just in case
  	P2IE |= BIT3; // interrupt enable
@@ -175,7 +233,6 @@ void adf7021n_txDisable(void)
 	P4OUT &= ~TX_CE_PIN;
 }
 
-
 void adf7021n_initRegisterZero(void)
 {
 	txReg.r0.fractional_n = 1536; // change fractional_n to change offset frequency error
@@ -193,7 +250,7 @@ void adf7021n_initRegisterOne(void)
 	txReg.r1.xosc_enable = ADF7021N_XOSC_ENABLE_ON; // for OSC1 pin 0.8Vpp Clipped Sine-wave
 	txReg.r1.xtal_bias = 0; // default
 	txReg.r1.cp_current = 0; // default
-	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF; // off by default
+	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON; // on by default
 	txReg.r1.rf_divide_by_2 = ADF7021N_RF_DIVIDE_BY_2_ON; // Internal Inductor for 437.850MHz out
 	txReg.r1.vco_bias = 0; // default
 	txReg.r1.vco_adjust = 0; // default
@@ -473,27 +530,13 @@ void adf7021n_setTxPowerAmpOff(void)
 
 void adf7021n_tx()
 {
-	P2OUT &= ~RX_CE_PIN;
-	P4OUT |= TX_CE_PIN;
-
-	adf7021n_initAllTxRegisgers();
-
-	adf7021n_setTxVcoBias(4);
-	adf7021n_setTxVcoAdjust(0);
-	adf7021n_setTxVcoEnableOn();
 	adf7021n_writeRegisterOne(TX);
 	//wait 0.7 ms
-
 	adf7021n_writeRegisterThree(TX);
-
 	adf7021n_writeRegisterZero(TX);
 	// wait 40 us
 	// check PLL to be locked
-
-	adf7021n_setTxPowerAmp(ADF7021N_PA_RAMP_NO_RAMP, ADF7021N_PA_BIAS_5uA, 30);
-	adf7021n_setTxPowerAmpOn();
 	adf7021n_writeRegisterTwo(TX);
-
 	mode = TX;
 }
 
@@ -501,52 +544,23 @@ void adf7021n_tx()
 
 void adf7021n_tx1010test()
 {
-	P2OUT &= ~RX_CE_PIN;
-	P4OUT |= TX_CE_PIN;
-
-//	IO_SET(RX_CE, LOW);
-//	IO_SET(TX_CE, HIGH);
-
-		// fill adf702x_tx_buf
-//		adf702x_write(adf7021_regs[1], TX);
-//		adf702x_write(adf7021_regs[3], TX);
-//		adf702x_write(adf7021_regs[0], TX);
-//		adf702x_write(adf7021_regs[4], TX);
-//		adf702x_write(adf7021_regs[2], TX);
-		adf7021n_writeRegisterOne(TX);
-		adf7021n_writeRegisterThree(TX);
-		adf7021n_writeRegisterZero(TX);
-		adf7021n_writeRegisterTwo(TX);
-		adf7021n_regWrite(0x0000040F, TX); //R15 1010 test pattern
-		mode = TX;
+	adf7021n_writeRegisterOne(TX);
+	adf7021n_writeRegisterThree(TX);
+	adf7021n_writeRegisterZero(TX);
+	adf7021n_writeRegisterTwo(TX);
+	adf7021n_regWrite(0x0000040F, TX); //R15 1010 test pattern
+	mode = TX;
 }
 
 
 void adf7021n_txCarriertest()
 {
-//	P2OUT &= ~RX_CE_PIN;
-//	P4OUT |= TX_CE_PIN;
-
-//	IO_SET(RX_CE, LOW);
-//	IO_SET(TX_CE, HIGH);
-
-		// fill adf702x_tx_buf
-//		adf702x_write(adf7021_regs[1], TX);
-//		adf702x_write(adf7021_regs[3], TX);
-//		adf702x_write(adf7021_regs[0], TX);
-//		adf702x_write(adf7021_regs[4], TX);
-//		adf702x_write(adf7021_regs[2], TX);
-
-
 	adf7021n_writeRegisterOne(TX);
 	//wait 0.7 ms
-
 	adf7021n_writeRegisterThree(TX);
-
 	adf7021n_writeRegisterZero(TX);
 	// wait 40 us
 	// check PLL to be locked
-
 	adf7021n_writeRegisterTwo(TX);
 	adf7021n_regWrite(0x0000010F, TX); //R15 Carrier F test pattern
 
@@ -555,52 +569,29 @@ void adf7021n_txCarriertest()
 
 void adf7021n_txHightest()
 {
-//	P2OUT &= ~RX_CE_PIN;
-//	P4OUT |= TX_CE_PIN;
 
-//	IO_SET(RX_CE, LOW);
-//	IO_SET(TX_CE, HIGH);
-
-		// fill adf702x_tx_buf
-//		adf702x_write(adf7021_regs[1], TX);
-//		adf702x_write(adf7021_regs[3], TX);
-//		adf702x_write(adf7021_regs[0], TX);
-//		adf702x_write(adf7021_regs[4], TX);
-//		adf702x_write(adf7021_regs[2], TX);
-		adf7021n_writeRegisterOne(TX);
-		adf7021n_writeRegisterThree(TX);
-		adf7021n_writeRegisterZero(TX);
-		adf7021n_writeRegisterTwo(TX);
-		adf7021n_regWrite(0x0000020F, TX); //R15 high tone test pattern
-		mode = TX;
+	adf7021n_writeRegisterOne(TX);
+	adf7021n_writeRegisterThree(TX);
+	adf7021n_writeRegisterZero(TX);
+	adf7021n_writeRegisterTwo(TX);
+	adf7021n_regWrite(0x0000020F, TX); //R15 high tone test pattern
+	mode = TX;
 }
 
 
 void adf7021n_txLowtest()
 {
-//	P2OUT &= ~RX_CE_PIN;
-//	P4OUT |= TX_CE_PIN;
-
-//	IO_SET(RX_CE, LOW);
-//	IO_SET(TX_CE, HIGH);
-
-		// fill adf702x_tx_buf
-//		adf702x_write(adf7021_regs[1], TX);
-//		adf702x_write(adf7021_regs[3], TX);
-//		adf702x_write(adf7021_regs[0], TX);
-//		adf702x_write(adf7021_regs[4], TX);
-//		adf702x_write(adf7021_regs[2], TX);
-		adf7021n_writeRegisterOne(TX);
-		adf7021n_writeRegisterThree(TX);
-		adf7021n_writeRegisterZero(TX);
-		adf7021n_writeRegisterTwo(TX);
-		adf7021n_regWrite(0x0000030F, TX); //R15 low tone test pattern
-		mode = TX;
+	adf7021n_writeRegisterOne(TX);
+	adf7021n_writeRegisterThree(TX);
+	adf7021n_writeRegisterZero(TX);
+	adf7021n_writeRegisterTwo(TX);
+	adf7021n_regWrite(0x0000030F, TX); //R15 low tone test pattern
+	mode = TX;
 }
 
 
 
-unsigned char adf7021n_get_mode()
+unsigned char adf7021n_getMode()
 {
 	return mode;
 }
@@ -620,27 +611,25 @@ void TX_PA_PowerOn()
 //    IO_SET(PA_ON, HIGH);
 }
 
-void adf7021n_setTxPaLevel()
-{
-	// TODO: make change level.
-//	adf702x_write(adf7021_regs[2] , TX);
-}
+//void adf7021n_setTxPaLevel()
+//{
+//	// TODO: make change level.
+////	adf702x_write(adf7021_regs[2] , TX);
+//}
 
 
-void adf7021n_sendStart()
+void adf7021n_sendStart(void)
 {
 	sendPacket();
 	P2OUT |= TX_DATA_PIN;//TODO: default data status???? high or low??
 //	IO_SET(TX_DATA,HIGH);
-
+	adf7021n_regWrite(0x0000000F, TX);
 	adf7021n_tx(); // set ADF register
 	TX_PA_PowerOn(); // PA on
 	ax25_packet_mode = AX25_START;
 	bytes_step=0;
 	bits_step=0;
 }
-
-
 
 void flipout(void)
 {
@@ -663,8 +652,6 @@ void fcsbit(uint8_t tbyte)
 	}
 
 }
-
-
 
 void sendByte()
 {
@@ -724,7 +711,7 @@ __interrupt void adf7021n_Data_Tx_handler(void)
 			} else if(ax25_packet_mode == AX25_DATA) //data
 			{
 				// if sent all sendData, go to AX25_FCS
-				if (bytes_step > sizeof(sendData)-1) {
+				if (bytes_step > sizeof(txBuffer)-1) {
 					ax25_packet_mode = AX25_FCS;
 					bytes_step=0;
 					bits_step = 0;
@@ -734,9 +721,9 @@ __interrupt void adf7021n_Data_Tx_handler(void)
 
 				// get data at each byte.
 				if(bits_step == 0 ) {
-					inbyte = sendData[bytes_step];
+					inbyte = txBuffer[bytes_step];
 				}
-				// send bytes (based on sizeof sendData)
+				// send bytes (based on sizeof txBuffer)
 				sendByte();
 
 			} else if(ax25_packet_mode == AX25_FCS) //fcs

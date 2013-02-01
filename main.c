@@ -1,8 +1,11 @@
 #include <msp430.h>
 #include "adf7021n.h"
 
-char message[255] = {'o','s','s', 'i',' ','1',' ',' ',' ',' ',' ',' '};
 int step = 10;
+
+uint8_t sendData[18] = {'H','e','l','l','o',' ','T','h','i','s',' ','i','s',' ','O','S','S','I'};
+char *dstAddr ="CQ    ";
+char *srcAddr ="OSSI-1";
 
 void configure_clock() {
 	// DCO 8MHZ
@@ -43,14 +46,15 @@ int main(void) {
 
 	adf7021n_setTxVcoBias(4);
 	adf7021n_setTxVcoAdjust(2);
-	adf7021n_setTxVcoEnableOn();
 	adf7021n_setTxPowerAmp(ADF7021N_PA_RAMP_NO_RAMP, ADF7021N_PA_BIAS_5uA, 63);
 	adf7021n_setTxPowerAmpOn();
 
-	adf7021n_txEnable();
+	P2IES |= BIT3; // interrupt hi/lo falling edge
 
 	_EINT();
 	while(1) {
+		adf7021n_txEnable();
+
 		//adf7021n_tx1010test();
 //		adf7021n_sendStart();
 		adf7021n_txCarriertest();
@@ -63,6 +67,16 @@ int main(void) {
 		for(i=0;i <20;i++)
 	    __delay_cycles(1000000);
 
+
+	 	ax25_makePacket(dstAddr, srcAddr, sendData, sizeof(sendData));
+	 	P2IFG &= ~BIT3; // P2.3 IFG cleared just in case
+	 	P2IE |= BIT3; // interrupt enable
+		adf7021n_sendStart();
+		for(i=0;i <20;i++)
+	    __delay_cycles(1000000);
+
+		P2IFG &= ~BIT3; // P2.3 IFG cleared just in case
+		P2IE &= ~BIT3; // interrupt enable
 
      }
 }
