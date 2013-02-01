@@ -31,19 +31,38 @@ int main(void) {
 	configure_clock();
 	__delay_cycles(1000000);
 	__delay_cycles(1000000);
-	adf7021n_init();
+
 	// Ready to Send
 	//adf7021n_tx1010test();	// Ready to Receive
 	// adf7021n_recvStart();
 	//adf7021n_sendStart();
-	adf7021n_enable_data_interrupt();
-	_EINT();
+//	adf7021n_enable_data_interrupt();
 
+	adf7021n_portSetup();
+	adf7021n_txInit();
+
+	adf7021n_setTxVcoBias(4);
+	adf7021n_setTxVcoAdjust(2);
+	adf7021n_setTxVcoEnableOn();
+	adf7021n_setTxPowerAmp(ADF7021N_PA_RAMP_NO_RAMP, ADF7021N_PA_BIAS_5uA, 63);
+	adf7021n_setTxPowerAmpOn();
+
+	adf7021n_txEnable();
+
+	_EINT();
 	while(1) {
 		//adf7021n_tx1010test();
-		adf7021n_sendStart();
-
+//		adf7021n_sendStart();
+		adf7021n_txCarriertest();
 		for(i=0;i <20;i++)
 	    __delay_cycles(1000000);
+		adf7021n_txHightest();
+		for(i=0;i <20;i++)
+	    __delay_cycles(1000000);
+		adf7021n_txLowtest();
+		for(i=0;i <20;i++)
+	    __delay_cycles(1000000);
+
+
      }
 }

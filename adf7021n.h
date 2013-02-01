@@ -11,19 +11,58 @@
 #include  <msp430x16x.h>
 #include "global.h"
 
+// Port 1
+#define RX_MUXOUT_PIN	(BIT1)
+#define RX_CLK_PIN 		(BIT2)
+#define RX_DATA_PIN 	(BIT3)
+#define RX_SWD_PIN 		(BIT4)
+#define RX_SCLK_PIN 	(BIT5)
+#define RX_SREAD_PIN 	(BIT6)
+#define RX_SDATA_PIN 	(BIT7)
+
+
+// Port 2
+#define RX_SLE_PIN 		(BIT0)
+#define RX_CE_PIN 		(BIT1)
+#define TX_MUXOUT_PIN	(BIT2)
+#define TX_CLK_PIN 		(BIT3) // INPUT
+#define TX_DATA_PIN 	(BIT4)
+#define TX_SCLK_PIN 	(BIT5)
+#define TX_SREAD_PIN 	(BIT6)
+#define TX_SDATA_PIN 	(BIT7)
+
+// Port 3
+
+// Port 4
+#define TX_SLE_PIN 		(BIT0)
+#define TX_CE_PIN 		(BIT1)
+#define TX_ON_PIN 		(BIT2)
+#define RX_ON_PIN 		(BIT3)
+#define PA_ON_PIN 		(BIT4)
+
+// Port 5
+
+// Port 6
+
+
 // Register 0
 #define ADF7021N_TX_MODE	(0)
 #define ADF7021N_RX_MODE	(1)
 #define ADF7021N_UART_DISABLED (0)
 #define ADF7021N_UART_ENABLED	(1)
-#define ADF7021N_MUXOUT_REGULATOR_READY	(0)
-#define ADF7021N_MUXOUT_FILTER_CAL_COMPLETE	(1)
-#define ADF7021N_MUXOUT_DIGITAL_LOCK_DETECT	(2)
-#define ADF7021N_MUXOUT_RSSI_READY	(3)
-#define ADF7021N_MUXOUT_TX_RX	(4)
-#define ADF7021N_MUXOUT_LOGIC_ZERO	(5)
-#define ADF7021N_MUXOUT_TRISTATE	(6)
-#define ADF7021N_MUXOUT_LOGIC_ONE	(7)
+
+typedef enum
+{
+	ADF7021N_MUXOUT_REGULATOR_READY	 = 0,
+	ADF7021N_MUXOUT_FILTER_CAL_COMPLETE = 1,
+	ADF7021N_MUXOUT_DIGITAL_LOCK_DETECT = 2,
+	ADF7021N_MUXOUT_RSSI_READY = 3,
+	ADF7021N_MUXOUT_TX_RX = 4,
+	ADF7021N_MUXOUT_LOGIC_ZERO = 5,
+	ADF7021N_MUXOUT_TRISTATE = 6,
+	ADF7021N_MUXOUT_LOGIC_ONE = 7
+} paramMuxout;
+
 
 // Register 1
 #define ADF7021N_XTAL_DOUBLER_DISABLE	(0)
@@ -56,18 +95,27 @@
 #define ADF7021N_MODULATION_RS4FSK		(7)
 #define ADF7021N_PA_ENABLE_OFF			(0)
 #define ADF7021N_PA_ENABLE_ON			(1)
-#define ADF7021N_PA_RAMP_NO_RAMP		(0)
-#define ADF7021N_PA_RAMP_256			(1)
-#define ADF7021N_PA_RAMP_128			(2)
-#define ADF7021N_PA_RAMP_64				(3)
-#define ADF7021N_PA_RAMP_32				(4)
-#define ADF7021N_PA_RAMP_16				(5)
-#define ADF7021N_PA_RAMP_8				(6)
-#define ADF7021N_PA_RAMP_4				(7)
-#define ADF7021N_PA_BIAS_5uA			(0)
-#define ADF7021N_PA_BIAS_7uA			(1)
-#define ADF7021N_PA_BIAS_9uA			(2)
-#define ADF7021N_PA_BIAS_11uA			(3)
+
+typedef enum
+{
+	ADF7021N_PA_RAMP_NO_RAMP = 0,
+	ADF7021N_PA_RAMP_256 = 1,
+	ADF7021N_PA_RAMP_128 = 2,
+	ADF7021N_PA_RAMP_64 = 3,
+	ADF7021N_PA_RAMP_32 = 4,
+	ADF7021N_PA_RAMP_16 = 5,
+	ADF7021N_PA_RAMP_8= 6,
+	ADF7021N_PA_RAMP_4 = 7
+} paramPaRamp;
+
+typedef enum
+{
+	ADF7021N_PA_BIAS_5uA = 0,
+	ADF7021N_PA_BIAS_7uA = 1,
+	ADF7021N_PA_BIAS_9uA = 2,
+	ADF7021N_PA_BIAS_11uA =3
+} paramPaBias;
+
 #define ADF7021N_TXDATA_INVERT_NORMAL	(0)
 #define ADF7021N_TXDATA_INVERT_CLK		(1)
 #define ADF7021N_TXDATA_INVERT_DATA		(2)
@@ -81,8 +129,27 @@
 #define ADF7021N_BBOS_CLK_DIVIDE_16		(2)
 #define ADF7021N_BBOS_CLK_DIVIDE_32		(3)
 
+void adf7021n_portSetup(void);
+void adf7021n_txInit(void);
 
-void adf7021n_init(void);
+void adf7021n_txEnable(void);
+void adf7021n_txDisable(void);
+
+void adf7021n_setTxFracN(uint16_t fracN);
+uint16_t adf7021n_getTxFracN(void);
+void adf7021n_setTxMuxout(paramMuxout muxout);
+uint8_t adf7021n_getTxMuxout(void);
+void adf7021n_setTxVcoBias(uint8_t vcoBias);
+uint8_t adf7021n_getTxVcoBias(void);
+void adf7021n_setTxVcoAdjust(uint8_t vcoAdjust);
+uint8_t adf7021n_getTxVcoAdjust(void);
+void adf7021n_setTxVcoEnableOff(void);
+void adf7021n_setTxVcoEnableOn(void);
+void adf7021n_setTxPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel);
+uint8_t adf7021n_getTxPALevel(void);
+void adf7021n_setTxPowerAmpOn(void);
+void adf7021n_setTxPowerAmpOff(void);
+
 void adf7021n_sendStart(void);
 void adf7021n_recvStart(void);
 

@@ -1,99 +1,4 @@
 #include "adf7021n.h"
-#include "global.h"
-
-// Port 1
-#define RX_TXCLK_PIN 	(BIT2)
-#define RX_DATA_PIN 	(BIT3)
-#define RX_SWD_PIN 		(BIT4)
-#define RX_SCLK_PIN 	(BIT5)
-#define RX_SREAD_PIN 	(BIT6)
-#define RX_SDATA_PIN 	(BIT7)
-
-
-// Port 2
-#define RX_SLE_PIN 		(BIT0)
-#define RX_CE_PIN 		(BIT1)
-#define TX_TXCLK_PIN 	(BIT3) // INPUT
-#define TX_DATA_PIN 	(BIT4)
-#define TX_SCLK_PIN 	(BIT5)
-#define TX_SREAD_PIN 	(BIT6)
-#define TX_SDATA_PIN 	(BIT7)
-
-// Port 3
-
-// Port 4
-#define TX_SLE_PIN 		(BIT0)
-#define TX_CE_PIN 		(BIT1)
-#define TX_ON_PIN 		(BIT2)
-#define RX_ON_PIN 		(BIT3)
-#define PA_ON_PIN 		(BIT4)
-
-// Port 5
-
-// Port 6
-
-
-
-////////////// TX
-
-//#define TX_TXCLK_PORT 2
-//#define TX_TXCLK_PIN 3
-//
-//#define TX_DATA_PORT 2
-//#define TX_DATA_PIN 4
-//
-//#define TX_SCLK_PORT 2
-//#define TX_SCLK_PIN 5
-//
-//#define TX_SREAD_PORT 2
-//#define TX_SREAD_PIN 6
-//
-//#define TX_SDATA_PORT 2
-//#define TX_SDATA_PIN 7
-
-//#define TX_SLE_PORT 4
-//#define TX_SLE_PIN 0
-//
-//#define TX_CE_PORT 4
-//#define TX_CE_PIN 1
-//
-//#define TX_ON_PORT 4
-//#define TX_ON_PIN 2
-
-///////////// TX PA
-
-//#define PA_ON_PORT 4
-//#define PA_ON_PIN 4
-
-///////////// RX
-
-//#define RX_TXCLK_PORT 1
-//#define RX_TXCLK_PIN 2
-//
-//#define RX_DATA_PORT 1
-//#define RX_DATA_PIN 3
-//
-//#define RX_SWD_PORT 1
-//#define RX_SWD_PIN 4
-//
-//#define RX_SCLK_PORT 1
-//#define RX_SCLK_PIN 5
-//
-//#define RX_SREAD_PORT 1
-//#define RX_SREAD_PIN 6
-//
-//#define RX_SDATA_PORT 1
-//#define RX_SDATA_PIN 7
-//
-//#define RX_SLE_PORT 2
-//#define RX_SLE_PIN 0
-//
-//#define RX_CE_PORT 2
-//#define RX_CE_PIN 1
-//
-//#define RX_ON_PORT 4
-//#define RX_ON_PIN 3
-
 
 struct {
 	struct{
@@ -137,7 +42,7 @@ struct {
 		uint8_t agc_clk_divide;
 	} r3;
 
-} adf7021n_reg;
+} txReg;
 
 
 /*
@@ -168,7 +73,6 @@ static const uint32_t adf7021_regs[] = {
 	0x371493A3, //r3
 	0x80592C94, //r4
 	0x00003155, //r5
-
 };
 
 
@@ -225,6 +129,8 @@ typedef enum {
 TX_PACKET_FRAME ax25_packet_mode;
 
 void sendPacket(void);
+
+
 void adf7021n_enable_data_interrupt()
 {
 
@@ -245,82 +151,74 @@ void adf7021n_enable_data_interrupt()
 	//P6DIR |= BIT0;
 //	IO_DIRECTION TODO: change IO_DIRECTION
 }
-void adf7021n_init()
+void adf7021n_portSetup(void)
 {
 	P1OUT &= ~(RX_SCLK_PIN + RX_SREAD_PIN + RX_SDATA_PIN);
-	P1DIR &= ~(RX_TXCLK_PIN + RX_DATA_PIN + RX_SWD_PIN);
+	P1DIR &= ~(RX_MUXOUT_PIN + RX_CLK_PIN + RX_DATA_PIN + RX_SWD_PIN);
 	P1DIR |= (RX_SCLK_PIN + RX_SREAD_PIN + RX_SDATA_PIN);
 
 	P2OUT &= ~(RX_SLE_PIN + RX_CE_PIN + TX_DATA_PIN + TX_SCLK_PIN + TX_SREAD_PIN + TX_SDATA_PIN);
-	P2DIR &= ~ TX_TXCLK_PIN;
+	P2DIR &= ~ (TX_MUXOUT_PIN + TX_CLK_PIN);
 	P2DIR |= (RX_SLE_PIN + RX_CE_PIN + TX_DATA_PIN + TX_SCLK_PIN + TX_SREAD_PIN + TX_SDATA_PIN);
 
 	P4OUT &= ~(TX_SLE_PIN + TX_CE_PIN + TX_ON_PIN + RX_ON_PIN + PA_ON_PIN);
 	P4DIR |= (TX_SLE_PIN + TX_CE_PIN + TX_ON_PIN + RX_ON_PIN + PA_ON_PIN);
+}
 
+void adf7021n_txEnable(void)
+{
+	P4OUT |= TX_CE_PIN;
+}
 
-//	IO_DIRECTION(RX_DATA, INPUT);
-//	IO_DIRECTION(RX_SCLK, OUTPUT);
-//	IO_DIRECTION(RX_SDATA, OUTPUT);
-//	IO_DIRECTION(RX_SLE, OUTPUT);
-//	IO_DIRECTION(RX_CE, OUTPUT);
-
-
-	// SCLK and SDATA pin must be LOW from start.
-//	IO_SET(TX_SCLK, LOW);
-//	IO_SET(TX_SDATA, LOW);
-////	IO_SET(TX_SLE, LOW);
-
-//	IO_SET(RX_SCLK, LOW);
-//	IO_SET(RX_SDATA, LOW);
-////	IO_SET(RX_SLE, LOW);
-
+void adf7021n_txDisable(void)
+{
+	P4OUT &= ~TX_CE_PIN;
 }
 
 
 void adf7021n_initRegisterZero(void)
 {
-	adf7021n_reg.r0.fractional_n = 1536;
-	adf7021n_reg.r0.integer_n = 228;
-	adf7021n_reg.r0.tx_rx = ADF7021N_TX_MODE;
-	adf7021n_reg.r0.uart_mode = ADF7021N_UART_DISABLED;
-	adf7021n_reg.r0.muxout = ADF7021N_MUXOUT_DIGITAL_LOCK_DETECT;
+	txReg.r0.fractional_n = 1536; // change fractional_n to change offset frequency error
+	txReg.r0.integer_n = 228;
+	txReg.r0.tx_rx = ADF7021N_TX_MODE;
+	txReg.r0.uart_mode = ADF7021N_UART_DISABLED;
+	txReg.r0.muxout = ADF7021N_MUXOUT_DIGITAL_LOCK_DETECT;
 }
 
 void adf7021n_initRegisterOne(void)
 {
-	adf7021n_reg.r1.r_counter = 5;
-	adf7021n_reg.r1.clkout_divide = 0; // Pin CLKOUT Off
-	adf7021n_reg.r1.xtal_doubler = ADF7021N_XTAL_DOUBLER_DISABLE;
-	adf7021n_reg.r1.xosc_enable = ADF7021N_XOSC_ENABLE_ON; // for OSC1 pin 0.8Vpp Clipped Sine-wave
-	adf7021n_reg.r1.xtal_bias = 0; // default
-	adf7021n_reg.r1.cp_current = 0; // default
-	adf7021n_reg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF; // off by default
-	adf7021n_reg.r1.rf_divide_by_2 = ADF7021N_RF_DIVIDE_BY_2_ON; // Internal Inductor for 437.850MHz out
-	adf7021n_reg.r1.vco_bias = 0; // default
-	adf7021n_reg.r1.vco_adjust = 0; // default
-	adf7021n_reg.r1.vco_inductor = ADF7021N_VCO_INDUCTOR_INTERNAL; // Internal Inductor for 437.850MHz out
+	txReg.r1.r_counter = 5;
+	txReg.r1.clkout_divide = 0; // Pin CLKOUT Off
+	txReg.r1.xtal_doubler = ADF7021N_XTAL_DOUBLER_DISABLE;
+	txReg.r1.xosc_enable = ADF7021N_XOSC_ENABLE_ON; // for OSC1 pin 0.8Vpp Clipped Sine-wave
+	txReg.r1.xtal_bias = 0; // default
+	txReg.r1.cp_current = 0; // default
+	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF; // off by default
+	txReg.r1.rf_divide_by_2 = ADF7021N_RF_DIVIDE_BY_2_ON; // Internal Inductor for 437.850MHz out
+	txReg.r1.vco_bias = 0; // default
+	txReg.r1.vco_adjust = 0; // default
+	txReg.r1.vco_inductor = ADF7021N_VCO_INDUCTOR_INTERNAL; // Internal Inductor for 437.850MHz out
 }
 
 void adf7021n_initRegisterTwo(void)
 {
-	adf7021n_reg.r2.modulation_scheme = ADF7021N_MODULATION_2FSK;
-	adf7021n_reg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF; // PA off by default
-	adf7021n_reg.r2.pa_ramp = ADF7021N_PA_RAMP_NO_RAMP; // default
-	adf7021n_reg.r2.pa_bias = 0; // default
-	adf7021n_reg.r2.power_amplifier = 0; // off by default
-	adf7021n_reg.r2.tx_frequency_deviation = 17; // for 1200 bps data rate
-	adf7021n_reg.r2.txdata_invert = 0; // normal by default
-	adf7021n_reg.r2.r_cosine_alpha = 0; // 0.5 by default
+	txReg.r2.modulation_scheme = ADF7021N_MODULATION_2FSK;
+	txReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF; // PA off by default
+	txReg.r2.pa_ramp = ADF7021N_PA_RAMP_NO_RAMP; // default
+	txReg.r2.pa_bias = 0; // default
+	txReg.r2.power_amplifier = 0; // off by default
+	txReg.r2.tx_frequency_deviation = 17; // for 1200 bps data rate
+	txReg.r2.txdata_invert = 0; // normal by default
+	txReg.r2.r_cosine_alpha = 0; // 0.5 by default
 }
 
 void adf7021n_initRegisterThree(void)
 {
-	adf7021n_reg.r3.bbos_clk_divide = 0; // default
-	adf7021n_reg.r3.demod_clk_divide = 5; // for 1200 bps data rate
-	adf7021n_reg.r3.cdr_clk_divide = 100; // for 1200 bps data rate
-	adf7021n_reg.r3.seq_clk_divide = 0; // default
-	adf7021n_reg.r3.agc_clk_divide = 1; // default (0 is invalid value)
+	txReg.r3.bbos_clk_divide = 0; // default
+	txReg.r3.demod_clk_divide = 5; // for 1200 bps data rate
+	txReg.r3.cdr_clk_divide = 100; // for 1200 bps data rate
+	txReg.r3.seq_clk_divide = 0; // default
+	txReg.r3.agc_clk_divide = 1; // default (0 is invalid value)
 }
 
 void adf7021n_initAllTxRegisgers(void)
@@ -329,6 +227,11 @@ void adf7021n_initAllTxRegisgers(void)
 	adf7021n_initRegisterOne();
 	adf7021n_initRegisterTwo();
 	adf7021n_initRegisterThree();
+}
+
+void adf7021n_txInit(void)
+{
+	adf7021n_initAllTxRegisgers();
 }
 
 void byte_write(uint8_t _register, uint8_t mode)
@@ -413,11 +316,11 @@ void adf7021n_writeRegisterZero(uint8_t mode)
 {
 	uint32_t reg =
 			(0) |
-			((uint32_t)(adf7021n_reg.r0.fractional_n & 0x7FFF) << 4) |
-			((uint32_t)(adf7021n_reg.r0.integer_n & 0xFF)<< 19) |
-			((uint32_t)(adf7021n_reg.r0.tx_rx & 0x01)<< 27) |
-			((uint32_t)(adf7021n_reg.r0.uart_mode & 0x01)<< 28) |
-			((uint32_t)(adf7021n_reg.r0.muxout & 0x07)<< 29);
+			((uint32_t)(txReg.r0.fractional_n & 0x7FFF) << 4) |
+			((uint32_t)(txReg.r0.integer_n & 0xFF)<< 19) |
+			((uint32_t)(txReg.r0.tx_rx & 0x01)<< 27) |
+			((uint32_t)(txReg.r0.uart_mode & 0x01)<< 28) |
+			((uint32_t)(txReg.r0.muxout & 0x07)<< 29);
 
 	adf7021n_regWrite(reg, mode);
 }
@@ -427,17 +330,17 @@ void adf7021n_writeRegisterOne(uint8_t mode)
 {
 	uint32_t reg =
 			(1) |
-			((uint32_t)(adf7021n_reg.r1.r_counter & 0x07) << 4) |
-			((uint32_t)(adf7021n_reg.r1.clkout_divide & 0x0F)<< 7) |
-			((uint32_t)(adf7021n_reg.r1.xtal_doubler & 0x01)<< 11) |
-			((uint32_t)(adf7021n_reg.r1.xosc_enable & 0x01)<< 12) |
-			((uint32_t)(adf7021n_reg.r1.xtal_bias & 0x03)<< 13) |
-			((uint32_t)(adf7021n_reg.r1.cp_current & 0x03)<< 15) |
-			((uint32_t)(adf7021n_reg.r1.vco_enable & 0x01)<< 17) |
-			((uint32_t)(adf7021n_reg.r1.rf_divide_by_2 & 0x01)<< 18) |
-			((uint32_t)(adf7021n_reg.r1.vco_bias & 0x0F)<< 19) |
-			((uint32_t)(adf7021n_reg.r1.vco_adjust & 0x03)<< 23) |
-			((uint32_t)(adf7021n_reg.r1.vco_inductor & 0x01)<< 25);
+			((uint32_t)(txReg.r1.r_counter & 0x07) << 4) |
+			((uint32_t)(txReg.r1.clkout_divide & 0x0F)<< 7) |
+			((uint32_t)(txReg.r1.xtal_doubler & 0x01)<< 11) |
+			((uint32_t)(txReg.r1.xosc_enable & 0x01)<< 12) |
+			((uint32_t)(txReg.r1.xtal_bias & 0x03)<< 13) |
+			((uint32_t)(txReg.r1.cp_current & 0x03)<< 15) |
+			((uint32_t)(txReg.r1.vco_enable & 0x01)<< 17) |
+			((uint32_t)(txReg.r1.rf_divide_by_2 & 0x01)<< 18) |
+			((uint32_t)(txReg.r1.vco_bias & 0x0F)<< 19) |
+			((uint32_t)(txReg.r1.vco_adjust & 0x03)<< 23) |
+			((uint32_t)(txReg.r1.vco_inductor & 0x01)<< 25);
 
 	adf7021n_regWrite(reg, mode);
 }
@@ -446,14 +349,14 @@ void adf7021n_writeRegisterTwo(uint8_t mode)
 {
 	uint32_t reg =
 			(2) |
-			((uint32_t)(adf7021n_reg.r2.modulation_scheme & 0x07) << 4) |
-			((uint32_t)(adf7021n_reg.r2.pa_enable & 0x01)<< 7) |
-			((uint32_t)(adf7021n_reg.r2.pa_ramp & 0x07)<< 8) |
-			((uint32_t)(adf7021n_reg.r2.pa_bias & 0x03)<< 11) |
-			((uint32_t)(adf7021n_reg.r2.power_amplifier & 0x3F)<< 13) |
-			((uint32_t)(adf7021n_reg.r2.tx_frequency_deviation & 0x1FF)<< 19) |
-			((uint32_t)(adf7021n_reg.r2.txdata_invert & 0x03)<< 28) |
-			((uint32_t)(adf7021n_reg.r2.r_cosine_alpha & 0x01)<< 30);
+			((uint32_t)(txReg.r2.modulation_scheme & 0x07) << 4) |
+			((uint32_t)(txReg.r2.pa_enable & 0x01)<< 7) |
+			((uint32_t)(txReg.r2.pa_ramp & 0x07)<< 8) |
+			((uint32_t)(txReg.r2.pa_bias & 0x03)<< 11) |
+			((uint32_t)(txReg.r2.power_amplifier & 0x3F)<< 13) |
+			((uint32_t)(txReg.r2.tx_frequency_deviation & 0x1FF)<< 19) |
+			((uint32_t)(txReg.r2.txdata_invert & 0x03)<< 28) |
+			((uint32_t)(txReg.r2.r_cosine_alpha & 0x01)<< 30);
 
 	adf7021n_regWrite(reg, mode);
 }
@@ -463,14 +366,15 @@ void adf7021n_writeRegisterThree(uint8_t mode)
 {
 	uint32_t reg =
 			(3) |
-			((uint32_t)(adf7021n_reg.r3.bbos_clk_divide & 0x03) << 4) |
-			((uint32_t)(adf7021n_reg.r3.demod_clk_divide & 0x0F)<< 6) |
-			((uint32_t)(adf7021n_reg.r3.cdr_clk_divide & 0xFF)<< 10) |
-			((uint32_t)(adf7021n_reg.r3.seq_clk_divide & 0xFF)<< 18) |
-			((uint32_t)(adf7021n_reg.r3.agc_clk_divide & 0x3F)<< 26);
+			((uint32_t)(txReg.r3.bbos_clk_divide & 0x03) << 4) |
+			((uint32_t)(txReg.r3.demod_clk_divide & 0x0F)<< 6) |
+			((uint32_t)(txReg.r3.cdr_clk_divide & 0xFF)<< 10) |
+			((uint32_t)(txReg.r3.seq_clk_divide & 0xFF)<< 18) |
+			((uint32_t)(txReg.r3.agc_clk_divide & 0x3F)<< 26);
 
 	adf7021n_regWrite(reg, mode);
 }
+
 
 
 void adf7021n_rx()
@@ -493,24 +397,101 @@ void adf7021n_rx()
     mode = IDLE;
 }
 
+void adf7021n_setTxFracN(uint16_t fracN)
+{
+	// TODO: boundary check fracN: 0~32767
+	txReg.r0.fractional_n = fracN;
+}
+
+uint16_t adf7021n_getTxFracN(void)
+{
+	return txReg.r0.fractional_n;
+}
+
+void adf7021n_setTxMuxout(paramMuxout muxout)
+{
+	txReg.r0.muxout = muxout;
+}
+
+uint8_t adf7021n_getTxMuxout(void)
+{
+	return txReg.r0.muxout;
+}
+
+// no parameter type for this function as we change this value in the code
+void adf7021n_setTxVcoBias(uint8_t vcoBias)
+{
+	txReg.r1.vco_bias = vcoBias;
+}
+
+uint8_t adf7021n_getTxVcoBias(void)
+{
+	return txReg.r1.vco_bias;
+}
+
+void adf7021n_setTxVcoAdjust(uint8_t vcoAdjust)
+{
+	txReg.r1.vco_adjust = vcoAdjust;
+}
+
+uint8_t adf7021n_getTxVcoAdjust(void)
+{
+	return txReg.r1.vco_adjust;
+}
+
+void adf7021n_setTxVcoEnableOff(void)
+{
+	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF;
+}
+
+void adf7021n_setTxVcoEnableOn(void)
+{
+	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON;
+}
+
+void adf7021n_setTxPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel)
+{
+	txReg.r2.pa_ramp = paRamp;
+	txReg.r2.pa_bias = paBias;
+	txReg.r2.power_amplifier = paLevel; // TODO: boundary check 0 ~ 63
+}
+
+uint8_t adf7021n_getTxPALevel(void)
+{
+	return txReg.r2.power_amplifier;
+}
+
+void adf7021n_setTxPowerAmpOn(void)
+{
+	txReg.r2.pa_enable = ADF7021N_PA_ENABLE_ON;
+}
+
+void adf7021n_setTxPowerAmpOff(void)
+{
+	txReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF;
+}
+
 void adf7021n_tx()
 {
 	P2OUT &= ~RX_CE_PIN;
 	P4OUT |= TX_CE_PIN;
 
-//	IO_SET(RX_CE, LOW);
-//	IO_SET(TX_CE, HIGH);
+	adf7021n_initAllTxRegisgers();
 
-	// fill adf702x_tx_buf
-//	adf702x_write(adf7021_regs[1], TX);
-//	adf702x_write(adf7021_regs[3], TX);
-//	adf702x_write(adf7021_regs[0], TX);
-//	adf702x_write(adf7021_regs[4], TX);
-//	adf702x_write(adf7021_regs[2], TX);
-
+	adf7021n_setTxVcoBias(4);
+	adf7021n_setTxVcoAdjust(0);
+	adf7021n_setTxVcoEnableOn();
 	adf7021n_writeRegisterOne(TX);
+	//wait 0.7 ms
+
 	adf7021n_writeRegisterThree(TX);
+
 	adf7021n_writeRegisterZero(TX);
+	// wait 40 us
+	// check PLL to be locked
+
+	adf7021n_setTxPowerAmp(ADF7021N_PA_RAMP_NO_RAMP, ADF7021N_PA_BIAS_5uA, 30);
+	adf7021n_setTxPowerAmpOn();
 	adf7021n_writeRegisterTwo(TX);
 
 	mode = TX;
@@ -540,10 +521,11 @@ void adf7021n_tx1010test()
 		mode = TX;
 }
 
+
 void adf7021n_txCarriertest()
 {
-	P2OUT &= ~RX_CE_PIN;
-	P4OUT |= TX_CE_PIN;
+//	P2OUT &= ~RX_CE_PIN;
+//	P4OUT |= TX_CE_PIN;
 
 //	IO_SET(RX_CE, LOW);
 //	IO_SET(TX_CE, HIGH);
@@ -554,18 +536,27 @@ void adf7021n_txCarriertest()
 //		adf702x_write(adf7021_regs[0], TX);
 //		adf702x_write(adf7021_regs[4], TX);
 //		adf702x_write(adf7021_regs[2], TX);
-		adf7021n_writeRegisterOne(TX);
-		adf7021n_writeRegisterThree(TX);
-		adf7021n_writeRegisterZero(TX);
-		adf7021n_writeRegisterTwo(TX);
-		adf7021n_regWrite(0x0000010F, TX); //R15 Carrier F test pattern
-		mode = TX;
+
+
+	adf7021n_writeRegisterOne(TX);
+	//wait 0.7 ms
+
+	adf7021n_writeRegisterThree(TX);
+
+	adf7021n_writeRegisterZero(TX);
+	// wait 40 us
+	// check PLL to be locked
+
+	adf7021n_writeRegisterTwo(TX);
+	adf7021n_regWrite(0x0000010F, TX); //R15 Carrier F test pattern
+
+	mode = TX;
 }
 
 void adf7021n_txHightest()
 {
-	P2OUT &= ~RX_CE_PIN;
-	P4OUT |= TX_CE_PIN;
+//	P2OUT &= ~RX_CE_PIN;
+//	P4OUT |= TX_CE_PIN;
 
 //	IO_SET(RX_CE, LOW);
 //	IO_SET(TX_CE, HIGH);
@@ -587,8 +578,8 @@ void adf7021n_txHightest()
 
 void adf7021n_txLowtest()
 {
-	P2OUT &= ~RX_CE_PIN;
-	P4OUT |= TX_CE_PIN;
+//	P2OUT &= ~RX_CE_PIN;
+//	P4OUT |= TX_CE_PIN;
 
 //	IO_SET(RX_CE, LOW);
 //	IO_SET(TX_CE, HIGH);
