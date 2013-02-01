@@ -82,26 +82,40 @@ fDEV = 498.046875 Hz
 data rate = 1200 bps
 */
 
+void adf7021n_portSetup(void)
+{
+	P1OUT &= ~(RX_SCLK_PIN + RX_SREAD_PIN + RX_SDATA_PIN);
+	P1DIR &= ~(RX_MUXOUT_PIN + RX_CLK_PIN + RX_DATA_PIN + RX_SWD_PIN);
+	P1DIR |= (RX_SCLK_PIN + RX_SREAD_PIN + RX_SDATA_PIN);
 
-//static const uint32_t adf7021_regs[] = {
-//	0x01600850, //r0
-//	0x00575011, //r1
-//	0x0027F082, //r2 // 12.04dBm: PA setting 63
-//	0x371493A3, //r3
-//	0x80592C94, //r4
-//	0x00003155, //r5
-//};
+	P2OUT &= ~(RX_SLE_PIN + RX_CE_PIN + TX_DATA_PIN + TX_SCLK_PIN + TX_SREAD_PIN + TX_SDATA_PIN);
+	P2DIR &= ~ (TX_MUXOUT_PIN + TX_CLK_PIN);
+	P2DIR |= (RX_SLE_PIN + RX_CE_PIN + TX_DATA_PIN + TX_SCLK_PIN + TX_SREAD_PIN + TX_SDATA_PIN);
+
+	P4OUT &= ~(TX_SLE_PIN + TX_CE_PIN + TX_ON_PIN + RX_ON_PIN + PA_ON_PIN);
+	P4DIR |= (TX_SLE_PIN + TX_CE_PIN + TX_ON_PIN + RX_ON_PIN + PA_ON_PIN);
+}
+
+void adf7021n_txEnable(void)
+{
+	P4OUT |= TX_CE_PIN;
+}
+
+void adf7021n_txDisable(void)
+{
+	P4OUT &= ~TX_CE_PIN;
+}
 
 
-//static const uint32_t adf7021_regs[] = {
-//	0x06E029A0, //r0
-//	0x00C6D051, //r1
-//	0x0027F082, //r2 // 12.04dBm: PA setting 63
-//	0x3714FD63, //r3
-//	0x00394A94, //r4
-//	0x00003155, //r5
-//	0x0000020F
-//};
+void adf7021n_rxEnable(void)
+{
+	P2OUT |= RX_CE_PIN;
+}
+
+void adf7021n_rxDisable(void)
+{
+	P2OUT &= ~RX_CE_PIN;
+}
 
 
 void ax25_makePacket(char* dstAddr, char* srcAddr, uint8_t* data, uint8_t dataSize)
@@ -169,40 +183,7 @@ void adf7021n_enable_data_interrupt()
 	//P6DIR |= BIT0;
 //	IO_DIRECTION TODO: change IO_DIRECTION
 }
-void adf7021n_portSetup(void)
-{
-	P1OUT &= ~(RX_SCLK_PIN + RX_SREAD_PIN + RX_SDATA_PIN);
-	P1DIR &= ~(RX_MUXOUT_PIN + RX_CLK_PIN + RX_DATA_PIN + RX_SWD_PIN);
-	P1DIR |= (RX_SCLK_PIN + RX_SREAD_PIN + RX_SDATA_PIN);
 
-	P2OUT &= ~(RX_SLE_PIN + RX_CE_PIN + TX_DATA_PIN + TX_SCLK_PIN + TX_SREAD_PIN + TX_SDATA_PIN);
-	P2DIR &= ~ (TX_MUXOUT_PIN + TX_CLK_PIN);
-	P2DIR |= (RX_SLE_PIN + RX_CE_PIN + TX_DATA_PIN + TX_SCLK_PIN + TX_SREAD_PIN + TX_SDATA_PIN);
-
-	P4OUT &= ~(TX_SLE_PIN + TX_CE_PIN + TX_ON_PIN + RX_ON_PIN + PA_ON_PIN);
-	P4DIR |= (TX_SLE_PIN + TX_CE_PIN + TX_ON_PIN + RX_ON_PIN + PA_ON_PIN);
-}
-
-void adf7021n_txEnable(void)
-{
-	P4OUT |= TX_CE_PIN;
-}
-
-void adf7021n_txDisable(void)
-{
-	P4OUT &= ~TX_CE_PIN;
-}
-
-
-void adf7021n_rxEnable(void)
-{
-	P4OUT |= RX_CE_PIN;
-}
-
-void adf7021n_rxDisable(void)
-{
-	P4OUT &= ~RX_CE_PIN;
-}
 
 void adf7021n_initRegisterZero(uint8_t mode)
 {
@@ -253,11 +234,17 @@ void adf7021n_initRegisterThree(uint8_t mode)
 	adf7021nReg.r3.cdr_clk_divide = 100; // for 1200 bps data rate
 	adf7021nReg.r3.seq_clk_divide = 0; // default
 	adf7021nReg.r3.agc_clk_divide = 1; // default (0 is invalid value)
+	if ( mode == RX)
+	{
+		adf7021nReg.r3.bbos_clk_divide = 16; // bbos_clk = xtal / divide  = 1 ~ 2 MHz
+		adf7021nReg.r3.seq_clk_divide = 192; // seq_clk = xtal / divide = 100kHz
+		adf7021nReg.r3.agc_clk_divide = 13; // recommended for AGC
+	}
 }
 
 void adf7021n_initRegisterFour(void)
 {
-	adf7021nReg.r4.demode_scheme = ADF7021N_2FSK_LINEAR_DEMOD;
+	adf7021nReg.r4.demode_scheme = ADF7021N_2FSK_CORREL_DEMOD;
 	adf7021nReg.r4.dot_product = ADF7021N_DOT_PRODUCT_CROSS;
 	adf7021nReg.r4.rx_invert = ADF7021N_RX_INVERT_NORMAL;
 	adf7021nReg.r4.discriminator_bw = 0;
@@ -296,15 +283,15 @@ void adf7021n_initRegisterSeven(void)
 
 void adf7021n_initRegisterNine(void)
 {
-	adf7021nReg.r9.agc_low_threshold = 0;
-	adf7021nReg.r9.agc_high_threshold = 0;
+	adf7021nReg.r9.agc_low_threshold = 30; // default value
+	adf7021nReg.r9.agc_high_threshold = 70; // default value
 	adf7021nReg.r9.agc_mode = ADF7021N_AGC_MODE_AUTO;
 	adf7021nReg.r9.lna_gain = ADF7021N_LNA_GAIN_3;
-	adf7021nReg.r9.filter_gain = ADF7021N_LNA_GAIN_3;
+	adf7021nReg.r9.filter_gain = ADF7021N_LNA_GAIN_30;
 	adf7021nReg.r9.filter_current = ADF7021N_FILTER_CURRENT_LOW;
 	adf7021nReg.r9.lna_mode = ADF7021N_LNA_MODE_DEFAULT;
 	adf7021nReg.r9.lna_bias = 0;
-	adf7021nReg.r9.mixer_linearity = ADF7021N_MIXER_LINEARITY_DEFAULT;
+	adf7021nReg.r9.mixer_linearity = ADF7021N_MIXER_LINEARITY_HIGH;
 }
 
 void adf7021n_initRegisterTen(void)
@@ -341,7 +328,6 @@ void adf7021n_initRegisterFifteen(void)
 }
 
 
-
 void adf7021n_initAllTxRegisgers(void)
 {
 	adf7021n_initRegisterZero(TX);
@@ -354,7 +340,6 @@ void adf7021n_txInit(void)
 {
 	adf7021n_initAllTxRegisgers();
 	P2IES |= BIT3; // interrupt hi/lo falling edge
-
 }
 
 void byte_write(uint8_t _register, uint8_t mode)
@@ -365,22 +350,17 @@ void byte_write(uint8_t _register, uint8_t mode)
 		for(i = 7; i >= 0; i--)
 		{
 			P2OUT &= ~TX_SCLK_PIN;
-//			IO_SET(TX_SCLK, LOW);
 			if(_register & (1<<i)) {
 				P2OUT |= TX_SDATA_PIN;
-//				IO_SET(TX_SDATA, HIGH);
 			}
 			else {
 				P2OUT &= ~TX_SDATA_PIN;
-//				IO_SET(TX_SDATA, LOW);
 			}
 			__delay_cycles(5);
 			P2OUT |= TX_SCLK_PIN;
-//			IO_SET(TX_SCLK, HIGH);
 			__delay_cycles(15);
 		}
 		P2OUT &= ~TX_SCLK_PIN;
-//		IO_SET(TX_SCLK, LOW);
 	} else if (mode == RX) {
 		for(i = 7; i >= 0; i--)
 		{
@@ -417,12 +397,9 @@ void adf7021n_regWrite(uint32_t registers, uint8_t mode)
     // SLE
 	if (mode == TX) {
 		P4OUT |= TX_SLE_PIN;
-//		IO_SET(TX_SLE, HIGH);
 		__delay_cycles(10);
 		P2OUT &= ~TX_SDATA_PIN;
-//		IO_SET(TX_SDATA, LOW);                       // SDATA low
 		P4OUT &= ~TX_SLE_PIN;
-//		IO_SET(TX_SLE, LOW);
 	} else if (mode == RX) {
 		P2OUT |= RX_SLE_PIN;
 //		IO_SET(RX_SLE, HIGH);
@@ -498,13 +475,6 @@ void adf7021n_writeRegisterThree(uint8_t mode)
 	adf7021n_regWrite(reg, mode);
 }
 
-
-
-
-
-
-
-
 void adf7021n_writeRegisterFour(uint8_t mode)
 {
 	uint32_t reg =
@@ -556,6 +526,7 @@ void adf7021n_writeRegisterSeven(uint8_t mode)
 			((uint32_t)(adf7021nReg.r7.adc_mode & 0x03) << 4) |
 			((uint32_t)(adf7021nReg.r7.readback_mode & 0x03)<< 6) |
 			((uint32_t)(adf7021nReg.r7.readback_select & 0x01)<< 8);
+
 	adf7021n_regWrite(reg, mode);
 }
 
@@ -617,25 +588,25 @@ void adf7021n_writeRegisterFifteen(uint8_t mode)
 			((uint32_t)(adf7021nReg.r15.force_ld_high & 0x01)<< 28) |
 			((uint32_t)(adf7021nReg.r15.reg_1_pd & 0x01)<< 29) |
 			((uint32_t)(adf7021nReg.r15.cal_override & 0x03)<< 30);
+
 	adf7021n_regWrite(reg, mode);
 }
 
 
 void adf7021n_rx()
 {
-	P4OUT &= ~TX_CE_PIN;
-	P2OUT |= RX_CE_PIN;
 
-//	IO_SET(TX_CE, LOW);
-//	IO_SET(RX_CE, HIGH);
+	adf7021n_writeRegisterOne(RX);
+	// wait 0.7 ms
+	adf7021n_writeRegisterThree(RX);
+	//adf7021n_writeRegisterSix(RX);
+	adf7021n_writeRegisterFive(RX);
+	// wait 0.2ms or 8.2 ms
+	adf7021n_writeRegisterZero(RX);
+	// wait 40 us
+	adf7021n_writeRegisterFour(RX);
 
-	// fill adf702x_rx_buf
- 	// r4 for 1200 bps
-//	adf702x_write(adf7021_regs[1], RX);
-//	adf702x_write(adf7021_regs[3], RX);
-//	adf702x_write(adf7021_regs[5], RX);
-//	adf702x_write(adf7021_regs[0], RX);
-//	adf702x_write(adf7021_regs[4], RX);
+	//adf7021n_writeRegisterTen(RX);
 
     //mode = RX;
     mode = IDLE;
