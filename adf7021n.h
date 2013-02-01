@@ -129,6 +129,203 @@ typedef enum
 #define ADF7021N_BBOS_CLK_DIVIDE_16		(2)
 #define ADF7021N_BBOS_CLK_DIVIDE_32		(3)
 
+// Register 4
+typedef enum
+{
+	ADF7021N_2FSK_LINEAR_DEMOD = 0,
+	ADF7021N_2FSK_CORREL_DEMOD = 1,
+	ADF7021N_3FSK_DEMOD = 2,
+	ADF7021N_4FSK_DEMOD = 3
+} paramDemodScheme;
+
+#define ADF7021N_DOT_PRODUCT_CROSS		(0)
+#define ADF7021N_DOT_PRODUCT_DOT		(1)
+#define ADF7021N_RX_INVERT_NORMAL		(0)
+#define ADF7021N_RX_INVERT_CLK			(1)
+#define ADF7021N_RX_INVERT_DATA			(2)
+#define ADF7021N_RX_INVERT_CLK_DATA		(3)
+#define ADF7021N_IF_FILT_BW_9kHz		(0)
+#define ADF7021N_IF_FILT_BW_13_5kHz		(1)
+#define ADF7021N_IF_FILT_BW_18_5kHz		(2)
+
+// Register 5
+#define ADF7021N_IF_CAL_COARSE_NO_CAL	(0)
+#define ADF7021N_IF_CAL_COARSE_DO_CAL	(1)
+#define ADF7021N_IR_PHASE_ADJ_DIR_I_CH	(0)
+#define ADF7021N_IR_PHASE_ADJ_DIR_Q_CH	(1)
+#define ADF7021N_IR_GAIN_ADJ_I_CH		(0)
+#define ADF7021N_IR_GAIN_ADJ_Q_CH		(1)
+#define ADF7021N_IR_GAIN_ADJ_UP_DN_GAIN	(0)
+#define ADF7021N_IR_GAIN_ADJ_UP_DN_ATTEN	(1)
+
+// Register 6
+#define ADF7021N_IF_FINE_CAL_DISABLED	(0)
+#define ADF7021N_IF_FINE_CAL_ENABLED	(1)
+typedef enum
+{
+	ADF7021N_IR_CAL_SRC_DRV_LEVEL_OFF = 0,
+	ADF7021N_IR_CAL_SRC_DRV_LEVEL_LOW = 1,
+	ADF7021N_IR_CAL_SRC_DRV_LEVEL_MID = 2,
+	ADF7021N_IR_CAL_SRC_DRV_LEVEL_HIGH = 3
+} paramIRCalSourceDriveLevel;
+
+#define ADF7021N_IR_CAL_SOURCE_DIVIDE_2_OFF	(0)
+#define ADF7021N_IR_CAL_SOURCE_DIVIDE_2_ON	(1)
+
+// Register 7
+typedef enum
+{
+	ADF7021N_ADC_MODE_RSSI = 0,
+	ADF7021N_ADC_MODE_BATTERY = 1,
+	ADF7021N_ADC_MODE_TEMP = 2,
+	ADF7021N_ADC_MODE_EXT_PIN = 3
+} paramAdcMode;
+
+typedef enum
+{
+	ADF7021N_READBACK_MODE_AFC = 0,
+	ADF7021N_READBACK_MODE_ADC = 1,
+	ADF7021N_READBACK_MODE_FILTER_CAL = 2,
+	ADF7021N_READBACK_MODE_SILICON_REV = 3
+} paramReadbackMode;
+
+#define ADF7021N_READBACK_DISABLED	(0)
+#define ADF7021N_READBACK_ENABLED	(1)
+
+// Register 8
+
+// Register 9
+typedef enum
+{
+	ADF7021N_AGC_MODE_AUTO = 0,
+	ADF7021N_AGC_MODE_MANUAL = 1,
+	ADF7021N_AGC_MODE_FREEZE = 2
+} paramAgcMode;
+
+typedef enum
+{
+	ADF7021N_LNA_GAIN_3= 0,
+	ADF7021N_LNA_GAIN_10 = 1,
+	ADF7021N_LNA_GAIN_30 = 2
+} paramLnaGain;
+
+typedef enum
+{
+	ADF7021N_FILTER_GAIN_8= 0,
+	ADF7021N_FILTER_GAIN_24 = 1,
+	ADF7021N_FILTER_GAIN_72 = 2
+} paramFilterGain;
+
+#define ADF7021N_FILTER_CURRENT_LOW		(0)
+#define ADF7021N_FILTER_CURRENT_HIGH	(1)
+#define ADF7021N_LNA_MODE_DEFAULT		(0)
+#define ADF7021N_LNA_MODE_REDUCED_GAIN	(1)
+#define ADF7021N_MIXER_LINEARITY_DEFAULT	(0)
+#define ADF7021N_MIXER_LINEARITY_HIGH		(1)
+
+// Register 10
+#define ADF7021N_AFC_EN_OFF				(0)
+#define ADF7021N_AFC_EN_ON				(1)
+
+// Register 14
+#define ADF7021N_TEST_DAC_EN_OFF		(0)
+#define ADF7021N_TEST_DAC_EN_ON			(1)
+
+// Register 15
+typedef enum
+{
+	ADF7021N_RX_TEST_NORMAL = 0,
+	ADF7021N_RX_TEST_SCLK_SDATA_I_Q = 1,
+	ADF7021N_RX_TEST_REVERSE_I_Q = 2,
+	ADF7021N_RX_TEST_I_Q_CLK_DATA = 3,
+	ADF7021N_RX_TEST_3FSK_SLICER_DATA = 4,
+	ADF7021N_RX_TEST_CORREL_SLICER_DATA = 5,
+	ADF7021N_RX_TEST_LINEAR_SLICER_DATA = 6,
+	ADF7021N_RX_TEST_SDATA_CDR = 7,
+	ADF7021N_RX_TEST_ADD_FILTERING_I_Q = 8,
+	ADF7021N_RX_TEST_EN_REG_14_DEMOD_PARAM = 9,
+	ADF7021N_RX_TEST_PWR_DN_DDT_ED_IN_T_4_MODE = 10,
+	ADF7021N_RX_TEST_ENV_DETECTOR_WDT_DISABLED = 11,
+	ADF7021N_RX_TEST_PROHIBIT_CALACTIVE = 13,
+	ADF7021N_RX_TEST_FORCE_CALACTIV = 14,
+	ADF7021N_RX_TEST_EN_DEMOD_DUR_CAL = 15
+} paramRxTestMode;
+
+typedef enum
+{
+	ADF7021N_TX_TEST_NORMAL = 0,
+	ADF7021N_TX_TEST_CARRIER = 1,
+	ADF7021N_TX_TEST_HIGH_TONE = 2,
+	ADF7021N_TX_TEST_LOW_TONE = 3,
+	ADF7021N_TX_TEST_1010 = 4,
+	ADF7021N_TX_TEST_PN9 = 5,
+	ADF7021N_TX_TEST_SYNC_BYTE_RPT = 6
+} paramTxTestMode;
+
+typedef enum
+{
+	ADF7021N_AG_TEST_BANDGAP_V = 0,
+	ADF7021N_AG_TEST_40uA_I_REG4 = 1,
+	ADF7021N_AG_TEST_FILT_I_STAGE1 = 2,
+	ADF7021N_AG_TEST_FILT_I_STAGE2 = 3,
+	ADF7021N_AG_TEST_FILT_I_STAGE1_ = 4,
+	ADF7021N_AG_TEST_FILT_Q_STAGE1 = 5,
+	ADF7021N_AG_TEST_FILT_Q_STAGE2 = 6,
+	ADF7021N_AG_TEST_FILT_Q_STAGE1_ = 7,
+	ADF7021N_AG_TEST_ADC_REF_V = 8,
+	ADF7021N_AG_TEST_BIAS_I_RSSI_5uA = 9,
+	ADF7021N_AG_TEST_FILT_CAL_OSC = 10,
+	ADF7021N_AG_TEST_AG_RSSI_I = 11,
+	ADF7021N_AG_TEST_OSET_LOOP_POS_VE_FB = 12,
+	ADF7021N_AG_TEST_RSSI_RECT_POS = 13,
+	ADF7021N_AG_TEST_RSSI_RECT_NEG = 14,
+	ADF7021N_AG_TEST_BIAS_I_BB_FILT = 15
+} paramAnalogTestMode;
+
+
+typedef struct {
+	struct{
+		uint16_t fractional_n;
+		uint8_t integer_n;
+		uint8_t tx_rx;
+		uint8_t uart_mode;
+		uint8_t muxout;
+	} r0;
+
+	struct{
+		uint8_t r_counter;
+		uint8_t clkout_divide;
+		uint8_t xtal_doubler;
+		uint8_t xosc_enable;
+		uint8_t xtal_bias;
+		uint8_t cp_current;
+		uint8_t vco_enable;
+		uint8_t rf_divide_by_2;
+		uint8_t vco_bias;
+		uint8_t vco_adjust;
+		uint8_t vco_inductor;
+	} r1;
+
+	struct{
+		uint8_t modulation_scheme;
+		uint8_t pa_enable;
+		uint8_t pa_ramp;
+		uint8_t pa_bias;
+		uint8_t power_amplifier;
+		uint16_t tx_frequency_deviation;
+		uint8_t txdata_invert;
+		uint8_t r_cosine_alpha;
+	} r2;
+
+	struct{
+		uint8_t bbos_clk_divide;
+		uint8_t demod_clk_divide;
+		uint8_t cdr_clk_divide;
+		uint8_t seq_clk_divide;
+		uint8_t agc_clk_divide;
+	} r3;
+
+} adf7021n_config;
 
 void ax25_makePacket(char* dstAddr, char* srcAddr, uint8_t* data, uint8_t dataSize);
 

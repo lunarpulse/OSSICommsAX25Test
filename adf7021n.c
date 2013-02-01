@@ -54,50 +54,9 @@ typedef enum {
 
 TX_PACKET_FRAME ax25_packet_mode;
 
-struct {
-	struct{
-		uint16_t fractional_n;
-		uint8_t integer_n;
-		uint8_t tx_rx;
-		uint8_t uart_mode;
-		uint8_t muxout;
-	} r0;
 
-	struct{
-		uint8_t r_counter;
-		uint8_t clkout_divide;
-		uint8_t xtal_doubler;
-		uint8_t xosc_enable;
-		uint8_t xtal_bias;
-		uint8_t cp_current;
-		uint8_t vco_enable;
-		uint8_t rf_divide_by_2;
-		uint8_t vco_bias;
-		uint8_t vco_adjust;
-		uint8_t vco_inductor;
-	} r1;
 
-	struct{
-		uint8_t modulation_scheme;
-		uint8_t pa_enable;
-		uint8_t pa_ramp;
-		uint8_t pa_bias;
-		uint8_t power_amplifier;
-		uint16_t tx_frequency_deviation;
-		uint8_t txdata_invert;
-		uint8_t r_cosine_alpha;
-	} r2;
-
-	struct{
-		uint8_t bbos_clk_divide;
-		uint8_t demod_clk_divide;
-		uint8_t cdr_clk_divide;
-		uint8_t seq_clk_divide;
-		uint8_t agc_clk_divide;
-	} r3;
-
-} txReg;
-
+adf7021n_config txReg;
 
 void sendPacket(void);
 
@@ -289,6 +248,8 @@ void adf7021n_initAllTxRegisgers(void)
 void adf7021n_txInit(void)
 {
 	adf7021n_initAllTxRegisgers();
+	P2IES |= BIT3; // interrupt hi/lo falling edge
+
 }
 
 void byte_write(uint8_t _register, uint8_t mode)

@@ -49,7 +49,6 @@ int main(void) {
 	adf7021n_setTxPowerAmp(ADF7021N_PA_RAMP_NO_RAMP, ADF7021N_PA_BIAS_5uA, 63);
 	adf7021n_setTxPowerAmpOn();
 
-	P2IES |= BIT3; // interrupt hi/lo falling edge
 
 	_EINT();
 	while(1) {
