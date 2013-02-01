@@ -325,6 +325,83 @@ typedef struct {
 		uint8_t agc_clk_divide;
 	} r3;
 
+	struct{
+		uint8_t demode_scheme;
+		uint8_t dot_product;
+		uint8_t rx_invert;
+		uint16_t discriminator_bw;
+		uint16_t post_demod_bw;
+		uint8_t if_filter_bw;
+	} r4;
+
+	struct{
+		uint8_t if_cal_coarse;
+		uint16_t if_filter_divider;
+		uint8_t if_filer_adjust;
+		uint8_t ir_phase_adjust_mag;
+		uint8_t ir_phase_adjust_direction;
+		uint8_t ir_gain_adjust_gain;
+		uint8_t ir_gain_adjust_mag;
+		uint8_t ir_gain_adjust_i_q;
+		uint8_t ir_gain_adjust_up_dn;
+	} r5;
+
+	struct{
+		uint8_t if_fine_cal;
+		uint8_t if_cal_lower_tone_divide;
+		uint8_t if_cal_upper_tone_divide;
+		uint8_t if_cal_dwell_time;
+		uint8_t ir_cal_source_drive_level;
+		uint8_t ir_cal_source_divide_by_2;
+	} r6;
+
+	struct{
+		uint8_t adc_mode;
+		uint8_t readback_mode;
+		uint8_t readback_select;
+	} r7;
+
+	struct{
+		uint8_t agc_low_threshold;
+		uint8_t agc_high_threshold;
+		uint8_t agc_mode;
+		uint8_t lna_gain;
+		uint8_t filter_gain;
+		uint8_t filter_current;
+		uint8_t lna_mode;
+		uint8_t lna_bias;
+		uint8_t mixer_linearity;
+	} r9;
+
+	struct{
+		uint8_t afc_en;
+		uint16_t afc_scaling_factior;
+		uint8_t ki;
+		uint8_t kp;
+		uint8_t max_afc_range;
+	} r10;
+
+	struct{
+		uint8_t test_dac_en;
+		uint16_t test_dac_offset;
+		uint8_t test_dac_gain;
+		uint8_t pulse_extension;
+		uint8_t ed_leak_factor;
+		uint8_t ed_peak_response;
+	} r14;
+
+	struct{
+		uint8_t rx_test_mode;
+		uint8_t tx_test_mode;
+		uint8_t sigma_delta_test_mode;
+		uint8_t pfd_cp_test_modes;
+		uint8_t clk_mux;
+		uint8_t pll_test_mode;
+		uint8_t analog_test_mode;
+		uint8_t force_ld_high;
+		uint8_t reg_1_pd;
+		uint8_t cal_override;
+	} r15;
 } adf7021n_config;
 
 void ax25_makePacket(char* dstAddr, char* srcAddr, uint8_t* data, uint8_t dataSize);

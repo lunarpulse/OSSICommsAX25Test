@@ -56,7 +56,8 @@ TX_PACKET_FRAME ax25_packet_mode;
 
 
 
-adf7021n_config txReg;
+adf7021n_config adf7021nReg;
+
 
 void sendPacket(void);
 
@@ -192,57 +193,161 @@ void adf7021n_txDisable(void)
 	P4OUT &= ~TX_CE_PIN;
 }
 
-void adf7021n_initRegisterZero(void)
+
+void adf7021n_rxEnable(void)
 {
-	txReg.r0.fractional_n = 1536; // change fractional_n to change offset frequency error
-	txReg.r0.integer_n = 228;
-	txReg.r0.tx_rx = ADF7021N_TX_MODE;
-	txReg.r0.uart_mode = ADF7021N_UART_DISABLED;
-	txReg.r0.muxout = ADF7021N_MUXOUT_DIGITAL_LOCK_DETECT;
+	P4OUT |= RX_CE_PIN;
+}
+
+void adf7021n_rxDisable(void)
+{
+	P4OUT &= ~RX_CE_PIN;
+}
+
+void adf7021n_initRegisterZero(uint8_t mode)
+{
+
+	adf7021nReg.r0.fractional_n = 1536; // change fractional_n to change offset frequency error
+	adf7021nReg.r0.integer_n = 228;
+	adf7021nReg.r0.tx_rx = ADF7021N_TX_MODE;
+	adf7021nReg.r0.uart_mode = ADF7021N_UART_DISABLED;
+	adf7021nReg.r0.muxout = ADF7021N_MUXOUT_DIGITAL_LOCK_DETECT;
+
+	if (mode == RX)
+	{
+		adf7021nReg.r0.tx_rx = ADF7021N_RX_MODE;
+	}
 }
 
 void adf7021n_initRegisterOne(void)
 {
-	txReg.r1.r_counter = 5;
-	txReg.r1.clkout_divide = 0; // Pin CLKOUT Off
-	txReg.r1.xtal_doubler = ADF7021N_XTAL_DOUBLER_DISABLE;
-	txReg.r1.xosc_enable = ADF7021N_XOSC_ENABLE_ON; // for OSC1 pin 0.8Vpp Clipped Sine-wave
-	txReg.r1.xtal_bias = 0; // default
-	txReg.r1.cp_current = 0; // default
-	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON; // on by default
-	txReg.r1.rf_divide_by_2 = ADF7021N_RF_DIVIDE_BY_2_ON; // Internal Inductor for 437.850MHz out
-	txReg.r1.vco_bias = 0; // default
-	txReg.r1.vco_adjust = 0; // default
-	txReg.r1.vco_inductor = ADF7021N_VCO_INDUCTOR_INTERNAL; // Internal Inductor for 437.850MHz out
+	adf7021nReg.r1.r_counter = 5;
+	adf7021nReg.r1.clkout_divide = 0; // Pin CLKOUT Off
+	adf7021nReg.r1.xtal_doubler = ADF7021N_XTAL_DOUBLER_DISABLE;
+	adf7021nReg.r1.xosc_enable = ADF7021N_XOSC_ENABLE_ON; // for OSC1 pin 0.8Vpp Clipped Sine-wave
+	adf7021nReg.r1.xtal_bias = 0; // default
+	adf7021nReg.r1.cp_current = 0; // default
+	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON; // on by default
+	adf7021nReg.r1.rf_divide_by_2 = ADF7021N_RF_DIVIDE_BY_2_ON; // Internal Inductor for 437.850MHz out
+	adf7021nReg.r1.vco_bias = 0; // default
+	adf7021nReg.r1.vco_adjust = 0; // default
+	adf7021nReg.r1.vco_inductor = ADF7021N_VCO_INDUCTOR_INTERNAL; // Internal Inductor for 437.850MHz out
 }
 
 void adf7021n_initRegisterTwo(void)
 {
-	txReg.r2.modulation_scheme = ADF7021N_MODULATION_2FSK;
-	txReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF; // PA off by default
-	txReg.r2.pa_ramp = ADF7021N_PA_RAMP_NO_RAMP; // default
-	txReg.r2.pa_bias = 0; // default
-	txReg.r2.power_amplifier = 0; // off by default
-	txReg.r2.tx_frequency_deviation = 17; // for 1200 bps data rate
-	txReg.r2.txdata_invert = 0; // normal by default
-	txReg.r2.r_cosine_alpha = 0; // 0.5 by default
+	adf7021nReg.r2.modulation_scheme = ADF7021N_MODULATION_2FSK;
+	adf7021nReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF; // PA off by default
+	adf7021nReg.r2.pa_ramp = ADF7021N_PA_RAMP_NO_RAMP; // default
+	adf7021nReg.r2.pa_bias = 0; // default
+	adf7021nReg.r2.power_amplifier = 0; // off by default
+	adf7021nReg.r2.tx_frequency_deviation = 17; // for 1200 bps data rate
+	adf7021nReg.r2.txdata_invert = 0; // normal by default
+	adf7021nReg.r2.r_cosine_alpha = 0; // 0.5 by default
 }
 
-void adf7021n_initRegisterThree(void)
+void adf7021n_initRegisterThree(uint8_t mode)
 {
-	txReg.r3.bbos_clk_divide = 0; // default
-	txReg.r3.demod_clk_divide = 5; // for 1200 bps data rate
-	txReg.r3.cdr_clk_divide = 100; // for 1200 bps data rate
-	txReg.r3.seq_clk_divide = 0; // default
-	txReg.r3.agc_clk_divide = 1; // default (0 is invalid value)
+	adf7021nReg.r3.bbos_clk_divide = 0; // default
+	adf7021nReg.r3.demod_clk_divide = 5; // for 1200 bps data rate
+	adf7021nReg.r3.cdr_clk_divide = 100; // for 1200 bps data rate
+	adf7021nReg.r3.seq_clk_divide = 0; // default
+	adf7021nReg.r3.agc_clk_divide = 1; // default (0 is invalid value)
 }
+
+void adf7021n_initRegisterFour(void)
+{
+	adf7021nReg.r4.demode_scheme = ADF7021N_2FSK_LINEAR_DEMOD;
+	adf7021nReg.r4.dot_product = ADF7021N_DOT_PRODUCT_CROSS;
+	adf7021nReg.r4.rx_invert = ADF7021N_RX_INVERT_NORMAL;
+	adf7021nReg.r4.discriminator_bw = 0;
+	adf7021nReg.r4.post_demod_bw = 0;
+	adf7021nReg.r4.if_filter_bw = 0;
+}
+
+void adf7021n_initRegisterFive(void)
+{
+	adf7021nReg.r5.if_cal_coarse = ADF7021N_IF_CAL_COARSE_NO_CAL;
+	adf7021nReg.r5.if_filter_divider = 0;
+	adf7021nReg.r5.if_filer_adjust = 0;
+	adf7021nReg.r5.ir_phase_adjust_mag = 0;
+	adf7021nReg.r5.ir_phase_adjust_direction = ADF7021N_IR_PHASE_ADJ_DIR_I_CH;
+	adf7021nReg.r5.ir_gain_adjust_mag = 0;
+	adf7021nReg.r5.ir_gain_adjust_i_q = ADF7021N_IR_GAIN_ADJ_I_CH;
+	adf7021nReg.r5.ir_gain_adjust_up_dn = ADF7021N_IR_GAIN_ADJ_UP_DN_GAIN;
+}
+
+void adf7021n_initRegisterSix(void)
+{
+	adf7021nReg.r6.if_fine_cal = ADF7021N_IF_FINE_CAL_DISABLED;
+	adf7021nReg.r6.if_cal_lower_tone_divide = 0;
+	adf7021nReg.r6.if_cal_upper_tone_divide = 0;
+	adf7021nReg.r6.if_cal_dwell_time = 0;
+	adf7021nReg.r6.ir_cal_source_drive_level = ADF7021N_IR_CAL_SRC_DRV_LEVEL_OFF;
+	adf7021nReg.r6.ir_cal_source_divide_by_2 = ADF7021N_IR_CAL_SOURCE_DIVIDE_2_OFF;
+}
+
+void adf7021n_initRegisterSeven(void)
+{
+	adf7021nReg.r7.adc_mode = ADF7021N_ADC_MODE_RSSI;
+	adf7021nReg.r7.readback_mode = ADF7021N_READBACK_MODE_AFC;
+	adf7021nReg.r7.readback_select = ADF7021N_READBACK_DISABLED;
+}
+
+void adf7021n_initRegisterNine(void)
+{
+	adf7021nReg.r9.agc_low_threshold = 0;
+	adf7021nReg.r9.agc_high_threshold = 0;
+	adf7021nReg.r9.agc_mode = ADF7021N_AGC_MODE_AUTO;
+	adf7021nReg.r9.lna_gain = ADF7021N_LNA_GAIN_3;
+	adf7021nReg.r9.filter_gain = ADF7021N_LNA_GAIN_3;
+	adf7021nReg.r9.filter_current = ADF7021N_FILTER_CURRENT_LOW;
+	adf7021nReg.r9.lna_mode = ADF7021N_LNA_MODE_DEFAULT;
+	adf7021nReg.r9.lna_bias = 0;
+	adf7021nReg.r9.mixer_linearity = ADF7021N_MIXER_LINEARITY_DEFAULT;
+}
+
+void adf7021n_initRegisterTen(void)
+{
+	adf7021nReg.r10.afc_en = ADF7021N_AFC_EN_OFF;
+	adf7021nReg.r10.afc_scaling_factior = 0;
+	adf7021nReg.r10.ki = 0;
+	adf7021nReg.r10.kp = 0;
+	adf7021nReg.r10.max_afc_range = 0;
+}
+
+void adf7021n_initRegisterFourteen(void)
+{
+	adf7021nReg.r14.test_dac_en = ADF7021N_TEST_DAC_EN_OFF;
+	adf7021nReg.r14.test_dac_offset = 0;
+	adf7021nReg.r14.test_dac_gain = 0;
+	adf7021nReg.r14.pulse_extension = 0;
+	adf7021nReg.r14.ed_leak_factor = 0;
+	adf7021nReg.r14.ed_peak_response = 0;
+}
+
+void adf7021n_initRegisterFifteen(void)
+{
+	adf7021nReg.r15.rx_test_mode = ADF7021N_RX_TEST_NORMAL;
+	adf7021nReg.r15.tx_test_mode = ADF7021N_TX_TEST_NORMAL;
+	adf7021nReg.r15.sigma_delta_test_mode = 0;
+	adf7021nReg.r15.pfd_cp_test_modes = 0;
+	adf7021nReg.r15.clk_mux = 0;
+	adf7021nReg.r15.pll_test_mode = 0;
+	adf7021nReg.r15.analog_test_mode = ADF7021N_AG_TEST_BANDGAP_V;
+	adf7021nReg.r15.force_ld_high = 0;
+	adf7021nReg.r15.reg_1_pd = 0;
+	adf7021nReg.r15.cal_override = 0;
+}
+
+
 
 void adf7021n_initAllTxRegisgers(void)
 {
-	adf7021n_initRegisterZero();
+	adf7021n_initRegisterZero(TX);
 	adf7021n_initRegisterOne();
 	adf7021n_initRegisterTwo();
-	adf7021n_initRegisterThree();
+	adf7021n_initRegisterThree(TX);
 }
 
 void adf7021n_txInit(void)
@@ -334,11 +439,11 @@ void adf7021n_writeRegisterZero(uint8_t mode)
 {
 	uint32_t reg =
 			(0) |
-			((uint32_t)(txReg.r0.fractional_n & 0x7FFF) << 4) |
-			((uint32_t)(txReg.r0.integer_n & 0xFF)<< 19) |
-			((uint32_t)(txReg.r0.tx_rx & 0x01)<< 27) |
-			((uint32_t)(txReg.r0.uart_mode & 0x01)<< 28) |
-			((uint32_t)(txReg.r0.muxout & 0x07)<< 29);
+			((uint32_t)(adf7021nReg.r0.fractional_n & 0x7FFF) << 4) |
+			((uint32_t)(adf7021nReg.r0.integer_n & 0xFF)<< 19) |
+			((uint32_t)(adf7021nReg.r0.tx_rx & 0x01)<< 27) |
+			((uint32_t)(adf7021nReg.r0.uart_mode & 0x01)<< 28) |
+			((uint32_t)(adf7021nReg.r0.muxout & 0x07)<< 29);
 
 	adf7021n_regWrite(reg, mode);
 }
@@ -348,17 +453,17 @@ void adf7021n_writeRegisterOne(uint8_t mode)
 {
 	uint32_t reg =
 			(1) |
-			((uint32_t)(txReg.r1.r_counter & 0x07) << 4) |
-			((uint32_t)(txReg.r1.clkout_divide & 0x0F)<< 7) |
-			((uint32_t)(txReg.r1.xtal_doubler & 0x01)<< 11) |
-			((uint32_t)(txReg.r1.xosc_enable & 0x01)<< 12) |
-			((uint32_t)(txReg.r1.xtal_bias & 0x03)<< 13) |
-			((uint32_t)(txReg.r1.cp_current & 0x03)<< 15) |
-			((uint32_t)(txReg.r1.vco_enable & 0x01)<< 17) |
-			((uint32_t)(txReg.r1.rf_divide_by_2 & 0x01)<< 18) |
-			((uint32_t)(txReg.r1.vco_bias & 0x0F)<< 19) |
-			((uint32_t)(txReg.r1.vco_adjust & 0x03)<< 23) |
-			((uint32_t)(txReg.r1.vco_inductor & 0x01)<< 25);
+			((uint32_t)(adf7021nReg.r1.r_counter & 0x07) << 4) |
+			((uint32_t)(adf7021nReg.r1.clkout_divide & 0x0F)<< 7) |
+			((uint32_t)(adf7021nReg.r1.xtal_doubler & 0x01)<< 11) |
+			((uint32_t)(adf7021nReg.r1.xosc_enable & 0x01)<< 12) |
+			((uint32_t)(adf7021nReg.r1.xtal_bias & 0x03)<< 13) |
+			((uint32_t)(adf7021nReg.r1.cp_current & 0x03)<< 15) |
+			((uint32_t)(adf7021nReg.r1.vco_enable & 0x01)<< 17) |
+			((uint32_t)(adf7021nReg.r1.rf_divide_by_2 & 0x01)<< 18) |
+			((uint32_t)(adf7021nReg.r1.vco_bias & 0x0F)<< 19) |
+			((uint32_t)(adf7021nReg.r1.vco_adjust & 0x03)<< 23) |
+			((uint32_t)(adf7021nReg.r1.vco_inductor & 0x01)<< 25);
 
 	adf7021n_regWrite(reg, mode);
 }
@@ -367,14 +472,14 @@ void adf7021n_writeRegisterTwo(uint8_t mode)
 {
 	uint32_t reg =
 			(2) |
-			((uint32_t)(txReg.r2.modulation_scheme & 0x07) << 4) |
-			((uint32_t)(txReg.r2.pa_enable & 0x01)<< 7) |
-			((uint32_t)(txReg.r2.pa_ramp & 0x07)<< 8) |
-			((uint32_t)(txReg.r2.pa_bias & 0x03)<< 11) |
-			((uint32_t)(txReg.r2.power_amplifier & 0x3F)<< 13) |
-			((uint32_t)(txReg.r2.tx_frequency_deviation & 0x1FF)<< 19) |
-			((uint32_t)(txReg.r2.txdata_invert & 0x03)<< 28) |
-			((uint32_t)(txReg.r2.r_cosine_alpha & 0x01)<< 30);
+			((uint32_t)(adf7021nReg.r2.modulation_scheme & 0x07) << 4) |
+			((uint32_t)(adf7021nReg.r2.pa_enable & 0x01)<< 7) |
+			((uint32_t)(adf7021nReg.r2.pa_ramp & 0x07)<< 8) |
+			((uint32_t)(adf7021nReg.r2.pa_bias & 0x03)<< 11) |
+			((uint32_t)(adf7021nReg.r2.power_amplifier & 0x3F)<< 13) |
+			((uint32_t)(adf7021nReg.r2.tx_frequency_deviation & 0x1FF)<< 19) |
+			((uint32_t)(adf7021nReg.r2.txdata_invert & 0x03)<< 28) |
+			((uint32_t)(adf7021nReg.r2.r_cosine_alpha & 0x01)<< 30);
 
 	adf7021n_regWrite(reg, mode);
 }
@@ -384,15 +489,136 @@ void adf7021n_writeRegisterThree(uint8_t mode)
 {
 	uint32_t reg =
 			(3) |
-			((uint32_t)(txReg.r3.bbos_clk_divide & 0x03) << 4) |
-			((uint32_t)(txReg.r3.demod_clk_divide & 0x0F)<< 6) |
-			((uint32_t)(txReg.r3.cdr_clk_divide & 0xFF)<< 10) |
-			((uint32_t)(txReg.r3.seq_clk_divide & 0xFF)<< 18) |
-			((uint32_t)(txReg.r3.agc_clk_divide & 0x3F)<< 26);
+			((uint32_t)(adf7021nReg.r3.bbos_clk_divide & 0x03) << 4) |
+			((uint32_t)(adf7021nReg.r3.demod_clk_divide & 0x0F)<< 6) |
+			((uint32_t)(adf7021nReg.r3.cdr_clk_divide & 0xFF)<< 10) |
+			((uint32_t)(adf7021nReg.r3.seq_clk_divide & 0xFF)<< 18) |
+			((uint32_t)(adf7021nReg.r3.agc_clk_divide & 0x3F)<< 26);
 
 	adf7021n_regWrite(reg, mode);
 }
 
+
+
+
+
+
+
+
+void adf7021n_writeRegisterFour(uint8_t mode)
+{
+	uint32_t reg =
+			(4) |
+			((uint32_t)(adf7021nReg.r4.demode_scheme & 0x07) << 4) |
+			((uint32_t)(adf7021nReg.r4.dot_product & 0x01) << 7) |
+			((uint32_t)(adf7021nReg.r4.rx_invert & 0x03)<< 8) |
+			((uint32_t)(adf7021nReg.r4.discriminator_bw & 0x7FF)<< 10) |
+			((uint32_t)(adf7021nReg.r4.post_demod_bw & 0x7FF)<< 20) |
+			((uint32_t)(adf7021nReg.r4.if_filter_bw & 0x03)<< 30);
+
+	adf7021n_regWrite(reg, mode);
+}
+
+void adf7021n_writeRegisterFive(uint8_t mode)
+{
+	uint32_t reg =
+			(5) |
+			((uint32_t)(adf7021nReg.r5.if_cal_coarse & 0x01) << 4) |
+			((uint32_t)(adf7021nReg.r5.if_filter_divider & 0x1FF)<< 5) |
+			((uint32_t)(adf7021nReg.r5.if_filer_adjust & 0x3F)<< 14) |
+			((uint32_t)(adf7021nReg.r5.ir_phase_adjust_mag & 0x0F)<< 20) |
+			((uint32_t)(adf7021nReg.r5.ir_phase_adjust_direction & 0x01)<< 24) |
+			((uint32_t)(adf7021nReg.r5.ir_gain_adjust_mag & 0x1F)<< 25) |
+			((uint32_t)(adf7021nReg.r5.ir_gain_adjust_i_q & 0x01)<< 30) |
+			((uint32_t)(adf7021nReg.r5.ir_gain_adjust_up_dn & 0x01)<< 31);
+	adf7021n_regWrite(reg, mode);
+}
+
+
+void adf7021n_writeRegisterSix(uint8_t mode)
+{
+	uint32_t reg =
+			(6) |
+			((uint32_t)(adf7021nReg.r6.if_fine_cal & 0x01) << 4) |
+			((uint32_t)(adf7021nReg.r6.if_cal_lower_tone_divide & 0xFF)<< 5) |
+			((uint32_t)(adf7021nReg.r6.if_cal_upper_tone_divide & 0xFF)<< 13) |
+			((uint32_t)(adf7021nReg.r6.if_cal_dwell_time & 0x7F)<< 21) |
+			((uint32_t)(adf7021nReg.r6.ir_cal_source_drive_level & 0x03)<< 28) |
+			((uint32_t)(adf7021nReg.r6.ir_cal_source_divide_by_2 & 0x01)<< 30);
+
+	adf7021n_regWrite(reg, mode);
+}
+
+void adf7021n_writeRegisterSeven(uint8_t mode)
+{
+	uint32_t reg =
+			(7) |
+			((uint32_t)(adf7021nReg.r7.adc_mode & 0x03) << 4) |
+			((uint32_t)(adf7021nReg.r7.readback_mode & 0x03)<< 6) |
+			((uint32_t)(adf7021nReg.r7.readback_select & 0x01)<< 8);
+	adf7021n_regWrite(reg, mode);
+}
+
+void adf7021n_writeRegisterNine(uint8_t mode)
+{
+	uint32_t reg =
+			(9) |
+			((uint32_t)(adf7021nReg.r9.agc_low_threshold & 0x7F) << 4) |
+			((uint32_t)(adf7021nReg.r9.agc_high_threshold & 0x7F)<< 11) |
+			((uint32_t)(adf7021nReg.r9.agc_mode & 0x03)<< 18) |
+			((uint32_t)(adf7021nReg.r9.lna_gain & 0x03)<< 20) |
+			((uint32_t)(adf7021nReg.r9.filter_gain & 0x03)<< 22) |
+			((uint32_t)(adf7021nReg.r9.filter_current & 0x01)<< 24) |
+			((uint32_t)(adf7021nReg.r9.lna_mode & 0x01)<< 25) |
+			((uint32_t)(adf7021nReg.r9.lna_bias & 0x03)<< 26) |
+			((uint32_t)(adf7021nReg.r9.mixer_linearity & 0x01)<< 28);
+
+	adf7021n_regWrite(reg, mode);
+}
+
+void adf7021n_writeRegisterTen(uint8_t mode)
+{
+	uint32_t reg =
+			(10) |
+			((uint32_t)(adf7021nReg.r10.afc_en & 0x01) << 4) |
+			((uint32_t)(adf7021nReg.r10.afc_scaling_factior & 0xFFF)<< 5) |
+			((uint32_t)(adf7021nReg.r10.ki & 0x0F)<< 17) |
+			((uint32_t)(adf7021nReg.r10.kp & 0x07)<< 21) |
+			((uint32_t)(adf7021nReg.r10.max_afc_range & 0xFF)<< 24);
+
+	adf7021n_regWrite(reg, mode);
+}
+
+void adf7021n_writeRegisterFourteen(uint8_t mode)
+{
+	uint32_t reg =
+			(14) |
+			((uint32_t)(adf7021nReg.r14.test_dac_en & 0x01) << 4) |
+			((uint32_t)(adf7021nReg.r14.test_dac_offset & 0xFFFF)<< 5) |
+			((uint32_t)(adf7021nReg.r14.test_dac_gain & 0x0F)<< 21) |
+			((uint32_t)(adf7021nReg.r14.pulse_extension & 0x03)<< 25) |
+			((uint32_t)(adf7021nReg.r14.ed_leak_factor & 0x07)<< 27) |
+			((uint32_t)(adf7021nReg.r14.ed_peak_response & 0x03)<< 30);
+
+	adf7021n_regWrite(reg, mode);
+}
+
+void adf7021n_writeRegisterFifteen(uint8_t mode)
+{
+	uint32_t reg =
+			(15) |
+			((uint32_t)(adf7021nReg.r15.rx_test_mode & 0x0F) << 4) |
+			((uint32_t)(adf7021nReg.r15.tx_test_mode & 0x07)<< 8) |
+			((uint32_t)(adf7021nReg.r15.sigma_delta_test_mode & 0x07)<< 11) |
+			((uint32_t)(adf7021nReg.r15.pfd_cp_test_modes & 0x07)<< 14) |
+			((uint32_t)(adf7021nReg.r15.clk_mux & 0x07)<< 17) |
+			((uint32_t)(adf7021nReg.r15.pll_test_mode & 0x0F)<< 20) |
+			((uint32_t)(adf7021nReg.r15.analog_test_mode & 0x0F)<< 24) |
+			((uint32_t)(adf7021nReg.r15.force_ld_high & 0x01)<< 28) |
+			((uint32_t)(adf7021nReg.r15.reg_1_pd & 0x01)<< 29) |
+			((uint32_t)(adf7021nReg.r15.cal_override & 0x03)<< 30);
+	adf7021n_regWrite(reg, mode);
+}
 
 
 void adf7021n_rx()
@@ -418,75 +644,75 @@ void adf7021n_rx()
 void adf7021n_setTxFracN(uint16_t fracN)
 {
 	// TODO: boundary check fracN: 0~32767
-	txReg.r0.fractional_n = fracN;
+	adf7021nReg.r0.fractional_n = fracN;
 }
 
 uint16_t adf7021n_getTxFracN(void)
 {
-	return txReg.r0.fractional_n;
+	return adf7021nReg.r0.fractional_n;
 }
 
 void adf7021n_setTxMuxout(paramMuxout muxout)
 {
-	txReg.r0.muxout = muxout;
+	adf7021nReg.r0.muxout = muxout;
 }
 
 uint8_t adf7021n_getTxMuxout(void)
 {
-	return txReg.r0.muxout;
+	return adf7021nReg.r0.muxout;
 }
 
 // no parameter type for this function as we change this value in the code
 void adf7021n_setTxVcoBias(uint8_t vcoBias)
 {
-	txReg.r1.vco_bias = vcoBias;
+	adf7021nReg.r1.vco_bias = vcoBias;
 }
 
 uint8_t adf7021n_getTxVcoBias(void)
 {
-	return txReg.r1.vco_bias;
+	return adf7021nReg.r1.vco_bias;
 }
 
 void adf7021n_setTxVcoAdjust(uint8_t vcoAdjust)
 {
-	txReg.r1.vco_adjust = vcoAdjust;
+	adf7021nReg.r1.vco_adjust = vcoAdjust;
 }
 
 uint8_t adf7021n_getTxVcoAdjust(void)
 {
-	return txReg.r1.vco_adjust;
+	return adf7021nReg.r1.vco_adjust;
 }
 
 void adf7021n_setTxVcoEnableOff(void)
 {
-	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF;
+	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF;
 }
 
 void adf7021n_setTxVcoEnableOn(void)
 {
-	txReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON;
+	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON;
 }
 
 void adf7021n_setTxPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel)
 {
-	txReg.r2.pa_ramp = paRamp;
-	txReg.r2.pa_bias = paBias;
-	txReg.r2.power_amplifier = paLevel; // TODO: boundary check 0 ~ 63
+	adf7021nReg.r2.pa_ramp = paRamp;
+	adf7021nReg.r2.pa_bias = paBias;
+	adf7021nReg.r2.power_amplifier = paLevel; // TODO: boundary check 0 ~ 63
 }
 
 uint8_t adf7021n_getTxPALevel(void)
 {
-	return txReg.r2.power_amplifier;
+	return adf7021nReg.r2.power_amplifier;
 }
 
 void adf7021n_setTxPowerAmpOn(void)
 {
-	txReg.r2.pa_enable = ADF7021N_PA_ENABLE_ON;
+	adf7021nReg.r2.pa_enable = ADF7021N_PA_ENABLE_ON;
 }
 
 void adf7021n_setTxPowerAmpOff(void)
 {
-	txReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF;
+	adf7021nReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF;
 }
 
 void adf7021n_tx()
