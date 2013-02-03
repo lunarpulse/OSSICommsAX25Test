@@ -11,6 +11,7 @@
 #include  <msp430x16x.h>
 #include "global.h"
 
+
 // Port 1
 #define RX_MUXOUT_PIN	(BIT1)
 #define RX_CLK_PIN 		(BIT2)
@@ -43,6 +44,10 @@
 // Port 5
 
 // Port 6
+
+
+#define TX_XTAL 		(19200000)
+#define RX_XTAL			(19200000)
 
 
 // Register 0
@@ -412,6 +417,11 @@ void adf7021n_txInit(void);
 void adf7021n_txEnable(void);
 void adf7021n_txDisable(void);
 
+void adf7021n_setTxFreqDeviation(uint16_t txFreqDev);
+void adf7021n_setRCounter(uint8_t rCounter);
+void adf7021n_setCDRDivider(uint8_t cdrDiv);
+void adf7021n_setDemodDivider(uint8_t demodDiv);
+void adf7021n_setTxIntegerN(uint8_t intN);
 void adf7021n_setTxFracN(uint16_t fracN);
 uint16_t adf7021n_getTxFracN(void);
 void adf7021n_setTxMuxout(paramMuxout muxout);
@@ -433,6 +443,7 @@ void adf7021n_recvStart(void);
 void adf7021n_tx(void);
 void adf7021n_rx(void);
 
+void adf7021n_txNotest();
 void adf7021n_tx1010test(void);
 void adf7021n_txCarriertest(void);
 void adf7021n_txHightest(void);

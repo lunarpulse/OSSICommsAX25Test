@@ -210,8 +210,8 @@ void adf7021n_initRegisterOne(void)
 	adf7021nReg.r1.cp_current = 0; // default
 	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON; // on by default
 	adf7021nReg.r1.rf_divide_by_2 = ADF7021N_RF_DIVIDE_BY_2_ON; // Internal Inductor for 437.850MHz out
-	adf7021nReg.r1.vco_bias = 0; // default
-	adf7021nReg.r1.vco_adjust = 0; // default
+	adf7021nReg.r1.vco_bias = 8; // default
+	adf7021nReg.r1.vco_adjust = 3; // default
 	adf7021nReg.r1.vco_inductor = ADF7021N_VCO_INDUCTOR_INTERNAL; // Internal Inductor for 437.850MHz out
 }
 
@@ -612,6 +612,34 @@ void adf7021n_rx()
     mode = IDLE;
 }
 
+void adf7021n_setTxFreqDeviation(uint16_t txFreqDev)
+{
+	adf7021nReg.r2.tx_frequency_deviation = txFreqDev;
+}
+
+
+void adf7021n_setRCounter(uint8_t rCounter)
+{
+	adf7021nReg.r1.r_counter = rCounter;
+}
+
+void adf7021n_setCDRDivider(uint8_t cdrDiv)
+{
+	adf7021nReg.r3.cdr_clk_divide = cdrDiv;
+}
+
+void adf7021n_setDemodDivider(uint8_t demodDiv)
+{
+	adf7021nReg.r3.demod_clk_divide = demodDiv;
+}
+
+void adf7021n_setTxIntegerN(uint8_t intN)
+{
+	// TODO: boundary check
+	adf7021nReg.r0.integer_n = intN;
+}
+
+
 void adf7021n_setTxFracN(uint16_t fracN)
 {
 	// TODO: boundary check fracN: 0~32767
@@ -720,7 +748,7 @@ void adf7021n_txCarriertest()
 	// wait 40 us
 	// check PLL to be locked
 	adf7021n_writeRegisterTwo(TX);
-	adf7021n_regWrite(0x0000010F, TX); //R15 Carrier F test pattern
+	adf7021n_regWrite(0x0000010F, TX); //R15 Carrier test pattern
 
 	mode = TX;
 }
@@ -744,6 +772,16 @@ void adf7021n_txLowtest()
 	adf7021n_writeRegisterZero(TX);
 	adf7021n_writeRegisterTwo(TX);
 	adf7021n_regWrite(0x0000030F, TX); //R15 low tone test pattern
+	mode = TX;
+}
+
+void adf7021n_txNotest()
+{
+	adf7021n_writeRegisterOne(TX);
+	adf7021n_writeRegisterThree(TX);
+	adf7021n_writeRegisterZero(TX);
+	adf7021n_writeRegisterTwo(TX);
+	adf7021n_regWrite(0x0000000F, TX);
 	mode = TX;
 }
 
@@ -779,8 +817,9 @@ void TX_PA_PowerOn()
 void adf7021n_sendStart(void)
 {
 	sendPacket();
-	P2OUT |= TX_DATA_PIN;//TODO: default data status???? high or low??
-//	IO_SET(TX_DATA,HIGH);
+//	P2OUT |= TX_DATA_PIN;//TODO: default data status???? high or low??
+	P2OUT &= ~TX_DATA_PIN;//TODO: default data status???? high or low??
+
 	adf7021n_regWrite(0x0000000F, TX);
 	adf7021n_tx(); // set ADF register
 	TX_PA_PowerOn(); // PA on
@@ -792,12 +831,10 @@ void adf7021n_sendStart(void)
 void flipout(void)
 {
 	stuff = 0;
-	if(!(P2OUT & BIT4))
+	if(!(P2OUT & TX_DATA_PIN))
 		P2OUT |= TX_DATA_PIN;
-//		IO_SET(TX_DATA,HIGH); //check TXDATA out register value
 	else
 		P2OUT &= ~TX_DATA_PIN;
-//		IO_SET(TX_DATA,LOW);
 }
 
 void fcsbit(uint8_t tbyte)
@@ -850,7 +887,7 @@ __interrupt void adf7021n_Data_Tx_handler(void)
 {
 	switch (P2IFG & BIT3) {
 		case BIT3:
-			//flag 20 times
+			//flag 100 times
 			if(ax25_packet_mode == AX25_START)
 			{
 				// if send 20 times, go to AX25_DATA
@@ -901,9 +938,9 @@ __interrupt void adf7021n_Data_Tx_handler(void)
 					inbyte = fcslo;
 
 				}
-				if (bits_step == 0 && bytes_step == 1 )inbyte = fcshi;
+				if (bits_step == 0 && bytes_step == 1)inbyte = fcshi;
 				if (bytes_step == 0) sendByte();
-				if (bytes_step == 1 )sendByte();
+				if (bytes_step == 1) sendByte();
 
 				// go to AX25_END
 			} else if(ax25_packet_mode == AX25_END) //flag 1 times
