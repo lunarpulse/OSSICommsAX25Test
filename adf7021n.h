@@ -49,6 +49,26 @@
 #define TX_XTAL 		(19200000)
 #define RX_XTAL			(19200000)
 
+#define IDLE 0
+#define TX 1
+#define RX 2
+
+#define RF_MAX 256
+#define PREAMBLE_BYTE           0xAA
+
+#define VALID_PREAMBLE_BYTE_1   0x55
+#define VALID_PREAMBLE_BYTE_2   0xAA
+
+#define SYNC_WORD1 0xD3                // First byte of sync word
+#define SYNC_WORD2 0x91                // Second byte of sync word
+
+#define HEADER_SIZE     4       // 4 bytes header
+
+#define ON  TRUE
+#define OFF FALSE
+
+#define adf702x_data       (adf702x_buf + 3)
+
 
 // Register 0
 typedef enum
@@ -210,7 +230,7 @@ typedef enum
 	ADF7021N_IR_CAL_SRC_DRV_LEVEL_LOW = 1,
 	ADF7021N_IR_CAL_SRC_DRV_LEVEL_MID = 2,
 	ADF7021N_IR_CAL_SRC_DRV_LEVEL_HIGH = 3
-} paramIRCalSourceDriveLevel;
+} paramIRCalSrcDrvLevel;
 
 #define ADF7021N_IR_CAL_SOURCE_DIVIDE_2_OFF	(0)
 #define ADF7021N_IR_CAL_SOURCE_DIVIDE_2_ON	(1)
@@ -232,8 +252,13 @@ typedef enum
 	ADF7021N_READBACK_MODE_SILICON_REV = 3
 } paramReadbackMode;
 
-#define ADF7021N_READBACK_DISABLED	(0)
-#define ADF7021N_READBACK_ENABLED	(1)
+typedef enum
+{
+	ADF7021N_READBACK_DISABLED = 0,
+	ADF7021N_READBACK_ENABLED = 1,
+} paramReadbackSelect;
+
+
 
 // Register 8
 
@@ -261,8 +286,10 @@ typedef enum
 
 #define ADF7021N_FILTER_CURRENT_LOW		(0)
 #define ADF7021N_FILTER_CURRENT_HIGH	(1)
+
 #define ADF7021N_LNA_MODE_DEFAULT		(0)
 #define ADF7021N_LNA_MODE_REDUCED_GAIN	(1)
+
 #define ADF7021N_MIXER_LINEARITY_DEFAULT	(0)
 #define ADF7021N_MIXER_LINEARITY_HIGH		(1)
 
@@ -455,25 +482,88 @@ void adf7021n_txInit(void);
 void adf7021n_txEnable(void);
 void adf7021n_txDisable(void);
 
-void adf7021n_setTxFreqDeviation(uint16_t txFreqDev);
-void adf7021n_setRCounter(uint8_t rCounter);
-void adf7021n_setCDRDivider(uint8_t cdrDiv);
-void adf7021n_setDemodDivider(uint8_t demodDiv);
-void adf7021n_setIntegerN(uint8_t intN);
+
+// Register 0 set / get functions
 void adf7021n_setFracN(uint16_t fracN);
 uint16_t adf7021n_getFracN(void);
+void adf7021n_setIntegerN(uint8_t intN);
+void adf7021n_setTxRx(paramTxRx txRx);
+uint8_t adf7021n_getTxRx(void);
 void adf7021n_setMuxout(paramMuxout muxout);
 uint8_t adf7021n_getMuxout(void);
+
+// Register 1 set / get functions
+void adf7021n_setRCounter(uint8_t rCounter);
+void adf7021n_setChargePumpCurrent (paramCpCurrent cpCurrent);
+uint8_t adf7021n_getChargePumpCurrent(void);
+void adf7021n_setVcoEnableOff(void);
+void adf7021n_setVcoEnableOn(void);
 void adf7021n_setVcoBias(uint8_t vcoBias);
 uint8_t adf7021n_getVcoBias(void);
 void adf7021n_setVcoAdjust(uint8_t vcoAdjust);
 uint8_t adf7021n_getVcoAdjust(void);
-void adf7021n_setVcoEnableOff(void);
-void adf7021n_setVcoEnableOn(void);
-void adf7021n_setPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel);
-uint8_t adf7021n_getPALevel(void);
+
+// Register 2 set / get functions
+void adf7021n_setModulationScheme(paramModulation modulationScheme);
 void adf7021n_setPowerAmpOn(void);
 void adf7021n_setPowerAmpOff(void);
+void adf7021n_setPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel);
+uint8_t adf7021n_getPALevel(void);
+void adf7021n_setTxFreqDeviation(uint16_t txFreqDev);
+
+// Register 3 set / get functions
+void adf7021n_setDemodDivider(uint8_t demodDiv);
+void adf7021n_setCDRDivider(uint8_t cdrDiv);
+
+// Register 4 set / get functions
+void adf7021n_setDemodScheme(paramDemodScheme demodScheme);
+void adf7021n_setDotProduct(paramDotProduct dotProduct);
+void adf7021n_setRxInvert(paramRxInvert rxInvert);
+void adf7021n_setDiscriminatorBW(uint16_t discrimBW);
+void adf7021n_setPostDemodBW(uint16_t postDemodBW);
+void adf7021n_setIFFilterBW(paramIfFiltBW ifFiltBW);
+
+// Register 5 set / get functions
+void adf7021n_setIFCalCoarseON(void);
+void adf7021n_setIFCalCoarseOFF(void);
+void adf7021n_setIFFliterAdj(uint8_t adj);
+void adf7021n_setIRPhaseAdjMag(uint8_t mag);
+void adf7021n_setIRPhasAdjDir_I(void);
+void adf7021n_setIRPhasAdjDir_Q(void);
+void adf7021n_setIRGainAdjMag(uint8_t mag);
+void adf7021n_setIRGainAdj_I(void);
+void adf7021n_setIRGainAdj_Q(void);
+void adf7021n_setIRGainAdj_Gain(void);
+void adf7021n_setIRGainAdj_Atten(void);
+
+// Register 6 set / get functions
+void adf7021n_setIFCalFineON(void);
+void adf7021n_setIFCalFineOFF(void);
+void adf7021n_setIRCalSrcDrvLevel(paramIRCalSrcDrvLevel level);
+void adf7021n_setIRCalSrcDiv2ON(void);
+void adf7021n_setIRCalSrcDiv2OFF(void);
+
+// Register 7 set / get functions
+void adf7021n_setADCMode(paramAdcMode adcMode);
+void adf7021n_setReadbackMode(paramReadbackMode readbackMode);
+void adf7021n_setReadbackSelectON(void);
+void adf7021n_setReadbackSelectOFF(void);
+
+// Register 9 set / get functions
+void adf7021n_setAGCLowThreshold(uint8_t lowThreshold);
+uint8_t adf7021n_getAGCLowThreshold(void);
+void adf7021n_setAGCHighThreshold(uint8_t highThreshold);
+uint8_t adf7021n_getAGCHighThreshold(void);
+void adf7021n_setAGCMode(paramAgcMode agcMode);
+void adf7021n_setLNAGain(paramLnaGain lnaGain);
+void adf7021n_setFilterGain(paramFilterGain filtGain);
+void adf7021n_setFilterCurrent_Low(void);
+void adf7021n_setFilterCurrent_High(void);
+void adf7021n_setLNAMode_Default(void);
+void adf7021n_setLNAMode_ReducedGain(void);
+void adf7021n_setMixerLinearity_Default(void);
+void adf7021n_setMixerLinearity_High(void);
+
 
 void adf7021n_sendStart(void);
 void adf7021n_recvStart(void);
@@ -489,25 +579,7 @@ void adf7021n_txLowtest(void);
 void adf7021n_enable_data_interrupt(void);
 unsigned char adf7021n_getMode(void);
 
-#define IDLE 0
-#define TX 1
-#define RX 2
 
-#define RF_MAX 256
-#define PREAMBLE_BYTE           0xAA
-
-#define VALID_PREAMBLE_BYTE_1   0x55
-#define VALID_PREAMBLE_BYTE_2   0xAA
-
-#define SYNC_WORD1 0xD3                // First byte of sync word
-#define SYNC_WORD2 0x91                // Second byte of sync word
-
-#define HEADER_SIZE     4       // 4 bytes header
-
-#define ON  TRUE
-#define OFF FALSE
-
-#define adf702x_data       (adf702x_buf + 3)
 
 
 #endif /* ADF7021N_H_ */
