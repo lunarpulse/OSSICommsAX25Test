@@ -51,8 +51,13 @@
 
 
 // Register 0
-#define ADF7021N_TX_MODE	(0)
-#define ADF7021N_RX_MODE	(1)
+typedef enum
+{
+ADF7021N_TX_MODE = 0,
+ADF7021N_RX_MODE =1
+} paramTxRx;
+
+
 #define ADF7021N_UART_DISABLED (0)
 #define ADF7021N_UART_ENABLED	(1)
 
@@ -72,32 +77,47 @@ typedef enum
 // Register 1
 #define ADF7021N_XTAL_DOUBLER_DISABLE	(0)
 #define ADF7021N_XTAL_DOUBLER_ENABLE	(1)
+
 #define ADF7021N_XOSC_ENABLE_OFF		(0)
 #define ADF7021N_XOSC_ENABLE_ON			(1) // for 0.8v p-p clipped sine-wave Oscillator
+
 #define ADF7021N_XTAL_BIAS_20uA			(0)
 #define ADF7021N_XTAL_BIAS_25uA			(1)
 #define ADF7021N_XTAL_BIAS_30uA			(2)
 #define ADF7021N_XTAL_BIAS_35uA			(3)
-#define ADF7021N_CP_CURRENT_0_3mA		(0) // all when Rset = 3.6k Ohm
-#define ADF7021N_CP_CURRENT_0_9mA		(1)
-#define ADF7021N_CP_CURRENT_1_5mA		(2)
-#define ADF7021N_CP_CURRENT_2_1mA		(3)
+
+typedef enum
+{
+	ADF7021N_CP_CURRENT_0_3mA = 0, // all when Rset = 3.6k Ohm
+	ADF7021N_CP_CURRENT_0_9mA = 1,
+	ADF7021N_CP_CURRENT_1_5mA = 2,
+	ADF7021N_CP_CURRENT_2_1mA = 3
+} paramCpCurrent;
+
+
 #define ADF7021N_VCO_ENABLE_OFF			(0)
 #define ADF7021N_VCO_ENABLE_ON			(1)
+
 #define ADF7021N_RF_DIVIDE_BY_2_OFF		(0)
 #define ADF7021N_RF_DIVIDE_BY_2_ON		(1)
+
 #define ADF7021N_VCO_INDUCTOR_INTERNAL	(0)
 #define ADF7021N_VCO_INDUCTOR_EXTERNAL	(1)
 
 // Register 2
-#define ADF7021N_MODULATION_2FSK		(0)
-#define ADF7021N_MODULATION_2GFSK		(1)
-#define ADF7021N_MODULATION_3FSK		(2)
-#define ADF7021N_MODULATION_4FSK		(3)
-#define ADF7021N_MODULATION_OVER2FSK	(4)
-#define ADF7021N_MODULATION_RS2FSK		(5)
-#define ADF7021N_MODULATION_RS3FSK		(6)
-#define ADF7021N_MODULATION_RS4FSK		(7)
+typedef enum
+{
+	ADF7021N_MODULATION_2FSK = 0,
+	ADF7021N_MODULATION_2GFSK = 1,
+	ADF7021N_MODULATION_3FSK = 2,
+	ADF7021N_MODULATION_4FSK = 3,
+	ADF7021N_MODULATION_OVER2FSK = 4,
+	ADF7021N_MODULATION_RS2FSK = 5,
+	ADF7021N_MODULATION_RS3FSK = 6,
+	ADF7021N_MODULATION_RS4FSK =7
+} paramModulation;
+
+
 #define ADF7021N_PA_ENABLE_OFF			(0)
 #define ADF7021N_PA_ENABLE_ON			(1)
 
@@ -125,6 +145,7 @@ typedef enum
 #define ADF7021N_TXDATA_INVERT_CLK		(1)
 #define ADF7021N_TXDATA_INVERT_DATA		(2)
 #define ADF7021N_TXDATA_INVERT_CLK_DATA	(3)
+
 #define ADF7021N_RCOSINE_ALPHA_0_5		(0)
 #define ADF7021N_RCOSINE_ALPHA_0_7		(1)
 
@@ -143,23 +164,40 @@ typedef enum
 	ADF7021N_4FSK_DEMOD = 3
 } paramDemodScheme;
 
-#define ADF7021N_DOT_PRODUCT_CROSS		(0)
-#define ADF7021N_DOT_PRODUCT_DOT		(1)
-#define ADF7021N_RX_INVERT_NORMAL		(0)
-#define ADF7021N_RX_INVERT_CLK			(1)
-#define ADF7021N_RX_INVERT_DATA			(2)
-#define ADF7021N_RX_INVERT_CLK_DATA		(3)
-#define ADF7021N_IF_FILT_BW_9kHz		(0)
-#define ADF7021N_IF_FILT_BW_13_5kHz		(1)
-#define ADF7021N_IF_FILT_BW_18_5kHz		(2)
+typedef enum
+{
+	ADF7021N_DOT_PRODUCT_CROSS = 0,
+	ADF7021N_DOT_PRODUCT_DOT = 1
+}paramDotProduct;
+
+
+typedef enum
+{
+	ADF7021N_RX_INVERT_NORMAL = 0,
+	ADF7021N_RX_INVERT_CLK = 1,
+	ADF7021N_RX_INVERT_DATA = 2,
+	ADF7021N_RX_INVERT_CLK_DATA = 3
+} paramRxInvert;
+
+typedef enum
+{
+ADF7021N_IF_FILT_BW_9kHz = 0,
+ADF7021N_IF_FILT_BW_13_5kHz = 1,
+ADF7021N_IF_FILT_BW_18_5kHz = 2
+} paramIfFiltBW;
+
+
 
 // Register 5
 #define ADF7021N_IF_CAL_COARSE_NO_CAL	(0)
 #define ADF7021N_IF_CAL_COARSE_DO_CAL	(1)
+
 #define ADF7021N_IR_PHASE_ADJ_DIR_I_CH	(0)
 #define ADF7021N_IR_PHASE_ADJ_DIR_Q_CH	(1)
+
 #define ADF7021N_IR_GAIN_ADJ_I_CH		(0)
 #define ADF7021N_IR_GAIN_ADJ_Q_CH		(1)
+
 #define ADF7021N_IR_GAIN_ADJ_UP_DN_GAIN	(0)
 #define ADF7021N_IR_GAIN_ADJ_UP_DN_ATTEN	(1)
 
@@ -421,21 +459,21 @@ void adf7021n_setTxFreqDeviation(uint16_t txFreqDev);
 void adf7021n_setRCounter(uint8_t rCounter);
 void adf7021n_setCDRDivider(uint8_t cdrDiv);
 void adf7021n_setDemodDivider(uint8_t demodDiv);
-void adf7021n_setTxIntegerN(uint8_t intN);
-void adf7021n_setTxFracN(uint16_t fracN);
-uint16_t adf7021n_getTxFracN(void);
-void adf7021n_setTxMuxout(paramMuxout muxout);
-uint8_t adf7021n_getTxMuxout(void);
-void adf7021n_setTxVcoBias(uint8_t vcoBias);
-uint8_t adf7021n_getTxVcoBias(void);
-void adf7021n_setTxVcoAdjust(uint8_t vcoAdjust);
-uint8_t adf7021n_getTxVcoAdjust(void);
-void adf7021n_setTxVcoEnableOff(void);
-void adf7021n_setTxVcoEnableOn(void);
-void adf7021n_setTxPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel);
-uint8_t adf7021n_getTxPALevel(void);
-void adf7021n_setTxPowerAmpOn(void);
-void adf7021n_setTxPowerAmpOff(void);
+void adf7021n_setIntegerN(uint8_t intN);
+void adf7021n_setFracN(uint16_t fracN);
+uint16_t adf7021n_getFracN(void);
+void adf7021n_setMuxout(paramMuxout muxout);
+uint8_t adf7021n_getMuxout(void);
+void adf7021n_setVcoBias(uint8_t vcoBias);
+uint8_t adf7021n_getVcoBias(void);
+void adf7021n_setVcoAdjust(uint8_t vcoAdjust);
+uint8_t adf7021n_getVcoAdjust(void);
+void adf7021n_setVcoEnableOff(void);
+void adf7021n_setVcoEnableOn(void);
+void adf7021n_setPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel);
+uint8_t adf7021n_getPALevel(void);
+void adf7021n_setPowerAmpOn(void);
+void adf7021n_setPowerAmpOff(void);
 
 void adf7021n_sendStart(void);
 void adf7021n_recvStart(void);

@@ -184,6 +184,234 @@ void adf7021n_enable_data_interrupt()
 //	IO_DIRECTION TODO: change IO_DIRECTION
 }
 
+// Register 0 set / get functions
+
+void adf7021n_setFracN(uint16_t fracN)
+{
+	// TODO: boundary check fracN: 0~32767
+	adf7021nReg.r0.fractional_n = fracN;
+}
+
+uint16_t adf7021n_getFracN(void)
+{
+	return adf7021nReg.r0.fractional_n;
+}
+
+void adf7021n_setIntegerN(uint8_t intN)
+{
+	// TODO: boundary check
+	adf7021nReg.r0.integer_n = intN;
+}
+
+void adf7021n_setTxRx(paramTxRx txRx)
+{
+	adf7021nReg.r0.tx_rx = txRx;
+}
+
+uint8_t adf7021n_getTxRx(void)
+{
+	return adf7021nReg.r0.tx_rx;
+}
+
+void adf7021n_setMuxout(paramMuxout muxout)
+{
+	adf7021nReg.r0.muxout = muxout;
+}
+
+uint8_t adf7021n_getMuxout(void)
+{
+	return adf7021nReg.r0.muxout;
+}
+
+// Register 1 set / get functions
+void adf7021n_setRCounter(uint8_t rCounter)
+{
+	adf7021nReg.r1.r_counter = rCounter;
+}
+
+
+void adf7021n_setChargePumpCurrent (paramCpCurrent cpCurrent)
+{
+	adf7021nReg.r1.cp_current = cpCurrent;
+}
+
+uint8_t adf7021n_getChargePumpCurrent(void)
+{
+	return adf7021nReg.r1.cp_current;
+}
+
+
+void adf7021n_setVcoEnableOff(void)
+{
+	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF;
+}
+
+void adf7021n_setVcoEnableOn(void)
+{
+	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON;
+}
+
+// no parameter type for this function as we change this value in the code
+void adf7021n_setVcoBias(uint8_t vcoBias)
+{
+	adf7021nReg.r1.vco_bias = vcoBias;
+}
+
+uint8_t adf7021n_getVcoBias(void)
+{
+	return adf7021nReg.r1.vco_bias;
+}
+
+void adf7021n_setVcoAdjust(uint8_t vcoAdjust)
+{
+	adf7021nReg.r1.vco_adjust = vcoAdjust;
+}
+
+uint8_t adf7021n_getVcoAdjust(void)
+{
+	return adf7021nReg.r1.vco_adjust;
+}
+
+
+// Register 2 set / get functions
+
+void adf7021n_setModulationScheme(paramModulation modulationScheme)
+{
+	adf7021nReg.r2.modulation_scheme = modulationScheme;
+}
+
+void adf7021n_setPowerAmpOn(void)
+{
+	adf7021nReg.r2.pa_enable = ADF7021N_PA_ENABLE_ON;
+}
+
+void adf7021n_setPowerAmpOff(void)
+{
+	adf7021nReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF;
+}
+
+void adf7021n_setPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel)
+{
+	adf7021nReg.r2.pa_ramp = paRamp;
+	adf7021nReg.r2.pa_bias = paBias;
+	adf7021nReg.r2.power_amplifier = paLevel; // TODO: boundary check 0 ~ 63
+}
+
+uint8_t adf7021n_getPALevel(void)
+{
+	return adf7021nReg.r2.power_amplifier;
+}
+
+void adf7021n_setTxFreqDeviation(uint16_t txFreqDev)
+{
+	adf7021nReg.r2.tx_frequency_deviation = txFreqDev;
+}
+
+
+// Register 3 set / get functions
+
+void adf7021n_setDemodDivider(uint8_t demodDiv)
+{
+	adf7021nReg.r3.demod_clk_divide = demodDiv;
+}
+
+
+void adf7021n_setCDRDivider(uint8_t cdrDiv)
+{
+	adf7021nReg.r3.cdr_clk_divide = cdrDiv;
+}
+
+
+// Register 4 set / get functions
+
+void adf7021n_setDemodScheme(paramDemodScheme demodScheme)
+{
+	adf7021nReg.r4.demode_scheme = demodScheme;
+}
+
+void adf7021n_setDotProduct(paramDotProduct dotProduct)
+{
+	adf7021nReg.r4.dot_product = dotProduct;
+}
+void adf7021n_setRxInvert(paramRxInvert rxInvert)
+{
+	adf7021nReg.r4.rx_invert = rxInvert;
+}
+
+void adf7021n_setDiscriminatorBW(uint16_t discrimBW)
+{
+	adf7021nReg.r4.discriminator_bw = discrimBW;
+}
+
+void adf7021n_setPostDemodBW(uint16_t postDemodBW)
+{
+	adf7021nReg.r4.post_demod_bw = postDemodBW;
+}
+
+void adf7021n_setIFFilterBW(paramIfFiltBW ifFiltBW)
+{
+	adf7021nReg.r4.if_filter_bw = ifFiltBW;
+}
+
+
+// Register 5 set / get functions
+
+void adf7021n_setIFCalCoarseON(void)
+{
+	adf7021nReg.r5.if_cal_coarse = ADF7021N_IF_CAL_COARSE_DO_CAL;
+}
+
+void adf7021n_setIFCalCoarseOFF(void)
+{
+	adf7021nReg.r5.if_cal_coarse = ADF7021N_IF_CAL_COARSE_NO_CAL;
+}
+
+void adf7021n_setIFFliterAdj(uint8_t adj)
+{
+	adf7021nReg.r5.if_filer_adjust = adj;
+}
+
+void adf7021n_setIRPhaseAdjMag(uint8_t mag)
+{
+	adf7021nReg.r5.ir_phase_adjust_mag = mag;
+}
+
+void adf7021n_setIRPhasAdjDir_I(void)
+{
+	adf7021nReg.r5.ir_phase_adjust_direction = ADF7021N_IR_PHASE_ADJ_DIR_I_CH;
+}
+
+void adf7021n_setIRPhasAdjDir_Q(void)
+{
+	adf7021nReg.r5.ir_phase_adjust_direction = ADF7021N_IR_PHASE_ADJ_DIR_Q_CH;
+}
+
+void adf7021n_setIRGainAdjMag(uint8_t mag)
+{
+	adf7021nReg.r5.ir_gain_adjust_mag = mag;
+}
+
+void adf7021n_setIRGainAdj_I(void)
+{
+	adf7021nReg.r5.ir_gain_adjust_i_q = ADF7021N_IR_GAIN_ADJ_I_CH;
+}
+
+void adf7021n_setIRGainAdj_Q(void)
+{
+	adf7021nReg.r5.ir_gain_adjust_i_q = ADF7021N_IR_GAIN_ADJ_Q_CH;
+}
+
+void adf7021n_setIRGainAdj_Gain(void)
+{
+	adf7021nReg.r5.ir_gain_adjust_up_dn = ADF7021N_IR_GAIN_ADJ_UP_DN_GAIN;
+}
+
+void adf7021n_setIRGainAdj_Atten(void)
+{
+	adf7021nReg.r5.ir_gain_adjust_up_dn = ADF7021N_IR_GAIN_ADJ_UP_DN_ATTEN;
+}
+
+
 
 void adf7021n_initRegisterZero(uint8_t mode)
 {
@@ -206,8 +434,8 @@ void adf7021n_initRegisterOne(void)
 	adf7021nReg.r1.clkout_divide = 0; // Pin CLKOUT Off
 	adf7021nReg.r1.xtal_doubler = ADF7021N_XTAL_DOUBLER_DISABLE;
 	adf7021nReg.r1.xosc_enable = ADF7021N_XOSC_ENABLE_ON; // for OSC1 pin 0.8Vpp Clipped Sine-wave
-	adf7021nReg.r1.xtal_bias = 0; // default
-	adf7021nReg.r1.cp_current = 0; // default
+	adf7021nReg.r1.xtal_bias = ADF7021N_XTAL_BIAS_35uA; // for fast start up
+	adf7021nReg.r1.cp_current = 0; // change this after measuring voltage of VCOIN so it can be in the middle
 	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON; // on by default
 	adf7021nReg.r1.rf_divide_by_2 = ADF7021N_RF_DIVIDE_BY_2_ON; // Internal Inductor for 437.850MHz out
 	adf7021nReg.r1.vco_bias = 8; // default
@@ -229,17 +457,11 @@ void adf7021n_initRegisterTwo(void)
 
 void adf7021n_initRegisterThree(uint8_t mode)
 {
-	adf7021nReg.r3.bbos_clk_divide = 0; // default
+	adf7021nReg.r3.bbos_clk_divide = 16; // default
 	adf7021nReg.r3.demod_clk_divide = 5; // for 1200 bps data rate
 	adf7021nReg.r3.cdr_clk_divide = 100; // for 1200 bps data rate
-	adf7021nReg.r3.seq_clk_divide = 0; // default
-	adf7021nReg.r3.agc_clk_divide = 1; // default (0 is invalid value)
-	if ( mode == RX)
-	{
-		adf7021nReg.r3.bbos_clk_divide = 16; // bbos_clk = xtal / divide  = 1 ~ 2 MHz
-		adf7021nReg.r3.seq_clk_divide = 192; // seq_clk = xtal / divide = 100kHz
-		adf7021nReg.r3.agc_clk_divide = 13; // recommended for AGC
-	}
+	adf7021nReg.r3.seq_clk_divide = 192; // default
+	adf7021nReg.r3.agc_clk_divide = 13; // default (0 is invalid value)
 }
 
 void adf7021n_initRegisterFour(void)
@@ -612,107 +834,6 @@ void adf7021n_rx()
     mode = IDLE;
 }
 
-void adf7021n_setTxFreqDeviation(uint16_t txFreqDev)
-{
-	adf7021nReg.r2.tx_frequency_deviation = txFreqDev;
-}
-
-
-void adf7021n_setRCounter(uint8_t rCounter)
-{
-	adf7021nReg.r1.r_counter = rCounter;
-}
-
-void adf7021n_setCDRDivider(uint8_t cdrDiv)
-{
-	adf7021nReg.r3.cdr_clk_divide = cdrDiv;
-}
-
-void adf7021n_setDemodDivider(uint8_t demodDiv)
-{
-	adf7021nReg.r3.demod_clk_divide = demodDiv;
-}
-
-void adf7021n_setTxIntegerN(uint8_t intN)
-{
-	// TODO: boundary check
-	adf7021nReg.r0.integer_n = intN;
-}
-
-
-void adf7021n_setTxFracN(uint16_t fracN)
-{
-	// TODO: boundary check fracN: 0~32767
-	adf7021nReg.r0.fractional_n = fracN;
-}
-
-uint16_t adf7021n_getTxFracN(void)
-{
-	return adf7021nReg.r0.fractional_n;
-}
-
-void adf7021n_setTxMuxout(paramMuxout muxout)
-{
-	adf7021nReg.r0.muxout = muxout;
-}
-
-uint8_t adf7021n_getTxMuxout(void)
-{
-	return adf7021nReg.r0.muxout;
-}
-
-// no parameter type for this function as we change this value in the code
-void adf7021n_setTxVcoBias(uint8_t vcoBias)
-{
-	adf7021nReg.r1.vco_bias = vcoBias;
-}
-
-uint8_t adf7021n_getTxVcoBias(void)
-{
-	return adf7021nReg.r1.vco_bias;
-}
-
-void adf7021n_setTxVcoAdjust(uint8_t vcoAdjust)
-{
-	adf7021nReg.r1.vco_adjust = vcoAdjust;
-}
-
-uint8_t adf7021n_getTxVcoAdjust(void)
-{
-	return adf7021nReg.r1.vco_adjust;
-}
-
-void adf7021n_setTxVcoEnableOff(void)
-{
-	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_OFF;
-}
-
-void adf7021n_setTxVcoEnableOn(void)
-{
-	adf7021nReg.r1.vco_enable = ADF7021N_VCO_ENABLE_ON;
-}
-
-void adf7021n_setTxPowerAmp(paramPaRamp paRamp, paramPaBias paBias, uint8_t paLevel)
-{
-	adf7021nReg.r2.pa_ramp = paRamp;
-	adf7021nReg.r2.pa_bias = paBias;
-	adf7021nReg.r2.power_amplifier = paLevel; // TODO: boundary check 0 ~ 63
-}
-
-uint8_t adf7021n_getTxPALevel(void)
-{
-	return adf7021nReg.r2.power_amplifier;
-}
-
-void adf7021n_setTxPowerAmpOn(void)
-{
-	adf7021nReg.r2.pa_enable = ADF7021N_PA_ENABLE_ON;
-}
-
-void adf7021n_setTxPowerAmpOff(void)
-{
-	adf7021nReg.r2.pa_enable = ADF7021N_PA_ENABLE_OFF;
-}
 
 void adf7021n_tx()
 {

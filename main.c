@@ -51,8 +51,8 @@ int main(void) {
 	// Data Rate = 300bps
 
 	adf7021n_setRCounter(5);
-	adf7021n_setTxIntegerN(228);
-	adf7021n_setTxFracN(1536);
+	adf7021n_setIntegerN(228);
+	adf7021n_setFracN(1536);
 //	adf7021n_setTxFracN(1580);
 
 
@@ -76,13 +76,13 @@ int main(void) {
 
 	// fDev = 1200 Hz at 300 bps
 //	adf7021n_setTxFreqDeviation(41);
-	adf7021n_setDemodDivider(8);
-	adf7021n_setCDRDivider(250);
+//	adf7021n_setDemodDivider(8);
+//	adf7021n_setCDRDivider(250);
 
-	adf7021n_setTxVcoBias(8);
-	adf7021n_setTxVcoAdjust(3);
-	adf7021n_setTxPowerAmp(ADF7021N_PA_RAMP_NO_RAMP, ADF7021N_PA_BIAS_5uA, 63);
-	adf7021n_setTxPowerAmpOn();
+	adf7021n_setVcoBias(8);
+	adf7021n_setVcoAdjust(3);
+	adf7021n_setPowerAmp(ADF7021N_PA_RAMP_NO_RAMP, ADF7021N_PA_BIAS_9uA, 63);
+	adf7021n_setPowerAmpOn();
 
 
 //	adf7021n_txEnable();
