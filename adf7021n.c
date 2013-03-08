@@ -687,8 +687,6 @@ void adf7021n_setMixerLinearity_High(void)
 
 
 
-
-
 void byte_write(uint8_t _register, uint8_t mode)
 {
 	volatile int i;

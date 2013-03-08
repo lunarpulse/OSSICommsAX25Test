@@ -255,7 +255,7 @@ typedef enum
 typedef enum
 {
 	ADF7021N_READBACK_DISABLED = 0,
-	ADF7021N_READBACK_ENABLED = 1,
+	ADF7021N_READBACK_ENABLED = 1
 } paramReadbackSelect;
 
 
@@ -576,10 +576,9 @@ void adf7021n_tx1010test(void);
 void adf7021n_txCarriertest(void);
 void adf7021n_txHightest(void);
 void adf7021n_txLowtest(void);
+
 void adf7021n_enable_data_interrupt(void);
 unsigned char adf7021n_getMode(void);
-
-
 
 
 #endif /* ADF7021N_H_ */
